@@ -1,5 +1,5 @@
-import { computed, ref } from 'vue'
-import { defineStore } from 'pinia'
+import {computed, ref} from 'vue'
+import {defineStore} from 'pinia'
 
 export interface AdminInfo {
   username: string
@@ -15,7 +15,7 @@ function readAdminInfo(): AdminInfo | null {
   }
 
   try {
-    return JSON.parse(adminText)
+    return JSON.parse(adminText) as AdminInfo
   } catch {
     return null
   }
@@ -26,7 +26,7 @@ export const useAuthStore = defineStore('auth', () => {
   const admin = ref<AdminInfo | null>(readAdminInfo())
 
   const isLogin = computed(() => {
-    return token.value !== ''
+    return token.value.trim() !== ''
   })
 
   function setLogin(loginToken: string, adminInfo: AdminInfo) {

@@ -2,12 +2,14 @@
 import {computed, ref, watch} from "vue";
 import {login} from "@/api/auth";
 import {useRouter} from "vue-router";
+import {useAuthStore} from "@/stores/auth";
 
 const username = ref('')
 const password = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
 const router = useRouter()
+const authStore = useAuthStore()
 
 const canLogin = computed(() => {
   return username.value.trim() !== '' && password.value.trim() !== ''
@@ -30,26 +32,25 @@ async function handleLogin() {
   loading.value = true
 
   try {
-    const res = await login({username: username.value, password: password.value})
+    const res = await login({
+      username: username.value.trim(),
+      password: password.value.trim()
+    })
     console.log('后端响应：', res.data)
     if (res.data.code !== 200) {
       errorMessage.value = res.data.message || '用户名或密码错误'
       return
     }
-    const token = res.data.data.token
-    localStorage.setItem('rain_blog_token', token)
-    localStorage.setItem(
-      'rain_blog_admin',
-      JSON.stringify({
-        username: res.data.data.username,
-        nickname: res.data.data.nickname,
-        avatar: res.data.data.avatar
-      })
-    )
+    const loginData = res.data.data
+    authStore.setLogin(loginData.token, {
+      username: loginData.username,
+      nickname: loginData.nickname,
+      avatar: loginData.avatar
+    })
     await router.push('/studio/dashboard')
   } catch (error) {
     console.log('登录失败', error)
-    errorMessage.value = '用户名或密码错误'
+    errorMessage.value = '服务器连接失败，请稍后重试！'
   } finally {
     loading.value = false
   }
