@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import catStarLogo from '@/assets/images/cat-star-logo.png'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -29,7 +30,12 @@ function isCurrentPath(path: string) {
 <template>
   <header class="blog-navbar">
     <RouterLink class="brand" to="/" @click="handleBrandClick">
-      Rain Blog
+      <img
+        class="brand-logo"
+        :src="catStarLogo"
+        alt="Rain Blog Logo"
+      />
+      <span>Rain Blog</span>
     </RouterLink>
 
     <nav class="nav-menu">
@@ -117,11 +123,22 @@ function isCurrentPath(path: string) {
 
   display: flex;
   align-items: center;
+  gap: 12px;
 
   color: #ffffff;
   text-decoration: none;
   font-size: 22px;
   font-weight: 700;
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+
+  object-fit: contain;
+  flex-shrink: 0;
+
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.18));
 }
 
 .nav-menu {
