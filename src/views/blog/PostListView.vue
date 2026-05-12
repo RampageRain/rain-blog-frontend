@@ -3,6 +3,7 @@ import {Icon} from '@iconify/vue'
 import {onBeforeUnmount, onMounted, ref} from 'vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
+import BlogFooter from '@/components/blog/BlogFooter.vue'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
 import postCover2 from '@/assets/images/home-bg-2.jpg'
@@ -363,6 +364,7 @@ onBeforeUnmount(() => {
         </article>
       </section>
     </section>
+    <BlogFooter/>
   </div>
 </template>
 
