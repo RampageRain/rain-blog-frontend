@@ -105,7 +105,6 @@ function isCurrentPath(path: string) {
   width: 100%;
   height: 64px;
 
-  /* 左边保留 Rain Blog 的距离，右边去掉空白 */
   padding: 0 0 0 56px;
 
   display: flex;
@@ -191,12 +190,10 @@ function isCurrentPath(path: string) {
   background: rgba(255, 255, 255, 0.22);
 }
 
-/* 鼠标进入菜单时，暂时取消当前页高亮 */
 .nav-menu:hover .nav-active {
   background: transparent;
 }
 
-/* 鼠标真正悬浮的项显示高亮 */
 .nav-menu:hover .nav-item:hover {
   background: rgba(255, 255, 255, 0.24);
 }

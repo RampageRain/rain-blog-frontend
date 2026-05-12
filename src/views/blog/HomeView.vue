@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
-import {RouterLink} from 'vue-router'
-import {Icon} from '@iconify/vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { Icon } from '@iconify/vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
+import PostListView from '@/views/blog/PostListView.vue'
 
 import homeBg1 from '@/assets/images/home-bg-1.jpg'
 import homeBg2 from '@/assets/images/home-bg-2.jpg'
@@ -71,9 +72,31 @@ function refreshHeroBackground() {
   sessionStorage.setItem('rain_blog_home_bg_index', String(currentIndex.value))
 }
 
+function scrollToPosts() {
+  document.getElementById('home-posts')?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  })
+}
+
 const subtitleText = '记录 Java 后端、Vue 前端与全栈成长'
 const displayedSubtitle = ref('')
 const isTyping = ref(false)
+
+let subtitleIntervalId: number | undefined
+let subtitlePauseTimeoutId: number | undefined
+
+function clearTypingTimers() {
+  if (subtitleIntervalId !== undefined) {
+    window.clearInterval(subtitleIntervalId)
+    subtitleIntervalId = undefined
+  }
+
+  if (subtitlePauseTimeoutId !== undefined) {
+    window.clearTimeout(subtitlePauseTimeoutId)
+    subtitlePauseTimeoutId = undefined
+  }
+}
 
 function startTypingSubtitle() {
   let index = 0
@@ -81,7 +104,7 @@ function startTypingSubtitle() {
 
   isTyping.value = true
 
-  window.setInterval(() => {
+  subtitleIntervalId = window.setInterval(() => {
     if (!deleting) {
       displayedSubtitle.value = subtitleText.slice(0, index + 1)
       index++
@@ -89,7 +112,7 @@ function startTypingSubtitle() {
       if (index === subtitleText.length) {
         isTyping.value = false
 
-        window.setTimeout(() => {
+        subtitlePauseTimeoutId = window.setTimeout(() => {
           deleting = true
           isTyping.value = true
         }, 1000)
@@ -104,7 +127,7 @@ function startTypingSubtitle() {
     if (index === 0) {
       deleting = false
 
-      window.setTimeout(() => {
+      subtitlePauseTimeoutId = window.setTimeout(() => {
         isTyping.value = true
       }, 600)
     }
@@ -114,21 +137,26 @@ function startTypingSubtitle() {
 onMounted(() => {
   startTypingSubtitle()
 })
+
+onBeforeUnmount(() => {
+  clearTypingTimers()
+})
 </script>
 
 <template>
   <main>
-    <BlogNavbar @refresh-home="refreshHeroBackground"/>
+    <BlogNavbar @refresh-home="refreshHeroBackground" />
 
     <section class="hero" :style="heroStyle">
       <div class="hero-content">
         <h1>Rain Blog</h1>
 
-        <p class="hero-subtitle">{{ displayedSubtitle }}<span v-if="isTyping"
-                                                              class="typing-cursor"></span></p>
+        <p class="hero-subtitle">
+          {{ displayedSubtitle }}<span v-if="isTyping" class="typing-cursor"></span>
+        </p>
 
         <div class="hero-actions">
-          <RouterLink to="/posts" class="hero-button primary">
+          <button type="button" class="hero-button primary" @click="scrollToPosts">
             <svg class="hero-button-icon down-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="currentColor"
@@ -136,7 +164,7 @@ onMounted(() => {
               />
             </svg>
             <span>开始阅读</span>
-          </RouterLink>
+          </button>
 
           <RouterLink to="/repositories" class="hero-button ghost">
             <svg class="hero-button-icon fork-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -158,7 +186,7 @@ onMounted(() => {
             data-tooltip="访问我的 GitHub"
             aria-label="访问我的 GitHub"
           >
-            <Icon class="social-icon" icon="simple-icons:github"/>
+            <Icon class="social-icon" icon="simple-icons:github" />
           </a>
 
           <a
@@ -167,7 +195,7 @@ onMounted(() => {
             data-tooltip="给我发送邮件"
             aria-label="给我发送邮件"
           >
-            <Icon class="social-icon" icon="mdi:email-outline"/>
+            <Icon class="social-icon" icon="mdi:email-outline" />
           </a>
 
           <button
@@ -176,7 +204,7 @@ onMounted(() => {
             data-tooltip="查看微信联系方式"
             aria-label="查看微信联系方式"
           >
-            <Icon class="social-icon" icon="simple-icons:wechat"/>
+            <Icon class="social-icon" icon="simple-icons:wechat" />
           </button>
 
           <button
@@ -185,7 +213,7 @@ onMounted(() => {
             data-tooltip="查看 QQ 联系方式"
             aria-label="查看 QQ 联系方式"
           >
-            <Icon class="social-icon qq-icon" icon="simple-icons:tencentqq"/>
+            <Icon class="social-icon qq-icon" icon="simple-icons:tencentqq" />
           </button>
 
           <a
@@ -196,19 +224,22 @@ onMounted(() => {
             data-tooltip="订阅 RSS"
             aria-label="订阅 RSS"
           >
-            <Icon class="social-icon" icon="mdi:rss"/>
+            <Icon class="social-icon" icon="mdi:rss" />
           </a>
         </div>
       </div>
-      <RouterLink to="/posts" class="hero-scroll-down" aria-label="查看最新文章">
+
+      <button type="button" class="hero-scroll-down" aria-label="查看最新文章" @click="scrollToPosts">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
             fill="currentColor"
             d="M7.4 6.2 12 10.8l4.6-4.6L18 7.6l-6 6-6-6 1.4-1.4Zm0 5L12 15.8l4.6-4.6L18 12.6l-6 6-6-6 1.4-1.4Z"
           />
         </svg>
-      </RouterLink>
+      </button>
     </section>
+
+    <PostListView embedded section-id="home-posts" />
   </main>
 </template>
 
@@ -229,7 +260,6 @@ onMounted(() => {
   background-position: center;
   background-repeat: no-repeat;
 }
-
 
 .hero-content {
   width: min(92vw, 960px);
@@ -288,6 +318,7 @@ onMounted(() => {
   height: 50px;
   padding: 0 clamp(28px, 3vw, 38px);
   border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
 
   display: inline-flex;
   align-items: center;
@@ -295,16 +326,19 @@ onMounted(() => {
   gap: 9px;
 
   color: #ffffff;
+  background: rgba(15, 23, 42, 0.18);
   text-decoration: none;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 1px;
   line-height: 1;
+  cursor: pointer;
 
-  transition: transform 0.2s,
-  background 0.2s,
-  border-color 0.2s,
-  box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .hero-button-icon {
@@ -313,21 +347,10 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.down-icon {
-  width: 18px;
-  height: 18px;
-}
-
+.down-icon,
 .fork-icon {
   width: 18px;
   height: 18px;
-}
-
-.hero-button.primary,
-.hero-button.ghost {
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  background: rgba(15, 23, 42, 0.18);
-  box-shadow: none;
 }
 
 .hero-button:hover {
@@ -350,19 +373,23 @@ onMounted(() => {
 
   width: 42px;
   height: 42px;
+  padding: 0;
+  border: none;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
   color: rgba(255, 255, 255, 0.82);
-  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
 
   transform: translateX(-50%);
 
-  transition: color 0.2s,
-  transform 0.2s,
-  opacity 0.2s;
+  transition:
+    color 0.2s,
+    transform 0.2s,
+    opacity 0.2s;
 }
 
 .hero-scroll-down svg {
@@ -395,8 +422,9 @@ onMounted(() => {
   cursor: pointer;
   padding: 0;
 
-  transition: color 0.2s,
-  transform 0.2s;
+  transition:
+    color 0.2s,
+    transform 0.2s;
 }
 
 .social-icon {
@@ -439,8 +467,9 @@ onMounted(() => {
   opacity: 0;
   pointer-events: none;
 
-  transition: opacity 0.2s,
-  transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .social-link::before {
@@ -458,8 +487,9 @@ onMounted(() => {
   opacity: 0;
   pointer-events: none;
 
-  transition: opacity 0.2s,
-  transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .social-link:hover::after,

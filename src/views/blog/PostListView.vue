@@ -35,6 +35,17 @@ interface IntroMeta {
   text: string
 }
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean
+    sectionId?: string
+  }>(),
+  {
+    embedded: false,
+    sectionId: 'posts'
+  }
+)
+
 const posts: Post[] = [
   {
     id: 1,
@@ -147,6 +158,7 @@ const quoteStyle = {
 }
 
 const signatureText = '保持热爱，奔赴山海；在代码的世界里，不断成长。'
+const signatureDisplayText = '保持热爱，奔赴山海；在代码的世界里，不断成长。'
 const displayedSignature = ref('')
 const isSignatureTyping = ref(false)
 
@@ -158,10 +170,10 @@ function startTypingSignature() {
   isSignatureTyping.value = true
 
   signatureIntervalId = window.setInterval(() => {
-    displayedSignature.value = signatureText.slice(0, index + 1)
+    displayedSignature.value = signatureDisplayText.slice(0, index + 1)
     index++
 
-    if (index === signatureText.length) {
+    if (index === signatureDisplayText.length) {
       isSignatureTyping.value = false
 
       if (signatureIntervalId !== undefined) {
@@ -184,8 +196,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="posts-page">
-    <BlogNavbar />
+  <div :id="props.sectionId" :class="['posts-page', { 'is-embedded': props.embedded }]">
+    <BlogNavbar v-if="!props.embedded" />
 
     <section class="posts-content">
       <section class="intro-card" :style="quoteStyle">
@@ -346,7 +358,7 @@ onBeforeUnmount(() => {
         </article>
       </section>
     </section>
-  </main>
+  </div>
 </template>
 
 <style scoped>
@@ -361,6 +373,15 @@ onBeforeUnmount(() => {
       rgba(0, 0, 0, 0.4)
     ),
     url('@/assets/images/postlist-bg.jpg') center / cover fixed no-repeat;
+}
+
+.posts-page.is-embedded {
+  min-height: auto;
+  padding-top: 36px;
+}
+
+.posts-page.is-embedded .posts-content {
+  padding-bottom: 96px;
 }
 
 .posts-content {
@@ -943,7 +964,7 @@ onBeforeUnmount(() => {
 /* 未分类弱化，但仍保持 chip 形态 */
 .grey-chip {
 
-  background-image: linear-gradient(to right, #c0a7e0 0%, #7f00fd 100%) !important;
+  background-image: linear-gradient(to right, #60d0df 0%, #5454b6 100%) !important;
 }
 
 @media (max-width: 980px) {
@@ -963,6 +984,10 @@ onBeforeUnmount(() => {
 @media (max-width: 640px) {
   .posts-page {
     padding-top: 84px;
+  }
+
+  .posts-page.is-embedded {
+    padding-top: 24px;
   }
 
   .posts-content {
