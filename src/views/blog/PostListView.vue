@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {Icon} from '@iconify/vue'
-import {onBeforeUnmount, onMounted, ref} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
+import { useBlogTheme } from '@/composables/useBlogTheme'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
 import postCover2 from '@/assets/images/home-bg-2.jpg'
@@ -11,6 +12,8 @@ import postCover3 from '@/assets/images/home-bg-3.jpg'
 import postCover4 from '@/assets/images/home-bg-4.jpg'
 import postCover5 from '@/assets/images/home-bg-5.jpg'
 import postCover6 from '@/assets/images/home-bg-6.jpg'
+import postListBgLight from '@/assets/images/postlist-bg-light.jpg'
+import postListBgNight from '@/assets/images/postlist-bg-night.jpg'
 import quoteBg from '@/assets/images/intro-card-img.jpg'
 import avatar from '@/assets/images/avart.jpg'
 
@@ -158,6 +161,22 @@ const quoteStyle = {
   backgroundImage: `url(${quoteBg})`
 }
 
+const { isLightTheme } = useBlogTheme()
+
+const pageStyle = computed(() => {
+  const currentBackground = isLightTheme.value ? postListBgLight : postListBgNight
+
+  return {
+    backgroundImage: `
+      linear-gradient(
+        rgba(0, 0, 0, 0.4),
+        rgba(0, 0, 0, 0.4)
+      ),
+      url(${currentBackground})
+    `
+  }
+})
+
 const signatureDisplayText = '保持热爱，奔赴山海；在代码的世界里，不断成长。'
 const displayedSignature = ref('')
 const isSignatureTyping = ref(false)
@@ -196,7 +215,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div :id="props.sectionId" :class="['posts-page', { 'is-embedded': props.embedded }]">
+  <div
+    :id="props.sectionId"
+    :class="['posts-page', { 'is-embedded': props.embedded }]"
+    :style="pageStyle"
+  >
     <BlogNavbar v-if="!props.embedded"/>
 
     <section class="posts-content">
@@ -373,12 +396,10 @@ onBeforeUnmount(() => {
   position: relative;
   min-height: 100vh;
   padding-top: 96px;
-
-  background: linear-gradient(
-    rgba(0, 0, 0, 0.4),
-    rgba(0, 0, 0, 0.4)
-  ),
-  url('@/assets/images/postlist-bg.jpg') center / cover fixed no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .posts-page.is-embedded {
