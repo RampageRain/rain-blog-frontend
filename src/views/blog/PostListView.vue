@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
@@ -142,6 +145,42 @@ const profileStats: ProfileStat[] = [
 const quoteStyle = {
   backgroundImage: `url(${quoteBg})`
 }
+
+const signatureText = '保持热爱，奔赴山海；在代码的世界里，不断成长。'
+const displayedSignature = ref('')
+const isSignatureTyping = ref(false)
+
+let signatureIntervalId: number | undefined
+
+function startTypingSignature() {
+  let index = 0
+
+  isSignatureTyping.value = true
+
+  signatureIntervalId = window.setInterval(() => {
+    displayedSignature.value = signatureText.slice(0, index + 1)
+    index++
+
+    if (index === signatureText.length) {
+      isSignatureTyping.value = false
+
+      if (signatureIntervalId !== undefined) {
+        window.clearInterval(signatureIntervalId)
+        signatureIntervalId = undefined
+      }
+    }
+  }, 120)
+}
+
+onMounted(() => {
+  startTypingSignature()
+})
+
+onBeforeUnmount(() => {
+  if (signatureIntervalId !== undefined) {
+    window.clearInterval(signatureIntervalId)
+  }
+})
 </script>
 
 <template>
@@ -214,43 +253,26 @@ const quoteStyle = {
                 class="profile-stat"
               >
           <span class="stat-icon">
-            <svg
+            <Icon
               v-if="stat.type === 'article'"
-              viewBox="0 0 24 24"
+              icon="solar:document-text-linear"
               aria-hidden="true"
-            >
-              <path d="M7 4h7l4 4v12H7z" />
-              <path d="M14 4v5h5" />
-              <path d="M9.5 13h7" />
-              <path d="M9.5 16h5" />
-            </svg>
-
-            <svg
+            />
+            <Icon
               v-else-if="stat.type === 'category'"
-              viewBox="0 0 24 24"
+              icon="solar:layers-linear"
               aria-hidden="true"
-            >
-              <path d="M4 7.5h6l1.7 2H20v8.5H4z" />
-              <path d="M4 7.5v-1.5h5.2l1.7 2H20v2" />
-            </svg>
-
-            <svg
+            />
+            <Icon
               v-else-if="stat.type === 'tag'"
-              viewBox="0 0 24 24"
+              icon="solar:tag-linear"
               aria-hidden="true"
-            >
-              <path d="M4 11.2V5h6.2L20 14.8 14.8 20z" />
-              <circle cx="8.4" cy="8.4" r="1.4" />
-            </svg>
-
-            <svg
+            />
+            <Icon
               v-else
-              viewBox="0 0 24 24"
+              icon="solar:eye-linear"
               aria-hidden="true"
-            >
-              <path d="M3.5 12s3.2-5.5 8.5-5.5S20.5 12 20.5 12s-3.2 5.5-8.5 5.5S3.5 12 3.5 12z" />
-              <circle cx="12" cy="12" r="2.8" />
-            </svg>
+            />
           </span>
 
                 <div class="stat-content">
@@ -264,9 +286,9 @@ const quoteStyle = {
           <div class="intro-image-panel">
             <div class="intro-image-content">
               <span class="quote-mark">“</span>
-              <p>
+              <p class="intro-quote-text">
                 保持热爱，奔赴山海；在代码的世界里，不断成长。
-              </p>
+                <span class="intro-quote-live">{{ displayedSignature }}</span><span v-if="isSignatureTyping" class="typing-cursor"></span></p>
             </div>
           </div>
         </div>
@@ -594,20 +616,59 @@ const quoteStyle = {
 }
 
 .quote-mark {
-  color: rgba(255, 255, 255, 0.82);
+  font-size: 0;
+  line-height: 1;
+}
+
+.quote-mark::before {
+  content: '“';
+  color: rgba(255, 255, 255, 0.88);
   font-size: 54px;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 4px 14px rgba(15, 23, 42, 0.36);
+  text-shadow:
+    0 3px 10px rgba(15, 23, 42, 0.44),
+    0 8px 20px rgba(15, 23, 42, 0.2);
 }
 
-.intro-image-content p {
+.intro-quote-text {
+  min-height: 3em;
   margin: 8px 0 0;
-
-  color: rgba(255, 255, 255, 0.96);
-  font-size: 17px;
+  font-size: 0;
   line-height: 1.9;
-  text-shadow: 0 3px 12px rgba(15, 23, 42, 0.5);
+}
+
+.intro-quote-live {
+  color: rgba(255, 255, 255, 0.98);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-family: inherit;
+  text-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.5),
+    0 6px 18px rgba(15, 23, 42, 0.34);
+}
+
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 6px;
+  vertical-align: -2px;
+  background: rgba(255, 255, 255, 0.92);
+  animation: cursorBlink 0.8s infinite;
+}
+
+@keyframes cursorBlink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+
+  46%,
+  100% {
+    opacity: 0;
+  }
 }
 
 /* 统计卡片 */
@@ -621,12 +682,13 @@ const quoteStyle = {
 
 .profile-stat {
   min-height: 92px;
-  padding: 18px 20px;
+  padding: 18px 18px 18px 16px;
   border-radius: 18px;
 
-  display: flex;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 
   background: rgba(248, 250, 252, 0.8);
   box-shadow:
@@ -646,54 +708,51 @@ const quoteStyle = {
 }
 
 .stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  color: rgba(15, 23, 42, 0.72);
+  color: #1d4ed8;
 
   background:
     linear-gradient(
       135deg,
-      rgba(248, 250, 252, 0.96),
-      rgba(226, 232, 240, 0.72)
+      rgba(255, 255, 255, 0.96),
+      rgba(219, 234, 254, 0.86)
     );
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.82),
-    0 6px 18px rgba(15, 23, 42, 0.08);
+    0 10px 22px rgba(37, 99, 235, 0.16);
 }
 
-.stat-icon svg {
-  width: 22px;
-  height: 22px;
-
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.stat-icon :deep(svg) {
+  width: 26px;
+  height: 26px;
 }
 
 .stat-content {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 7px;
+  min-width: 0;
+  text-align: left;
 }
 
 .stat-content strong {
   color: #0f172a;
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 900;
   line-height: 1;
 }
 
 .stat-content span {
-  color: #64748b;
-  font-size: 14px;
+  color: #475569;
+  font-size: 13px;
+  letter-spacing: 0.08em;
 }
 
 /* 文章卡片 */
@@ -884,7 +943,7 @@ const quoteStyle = {
 /* 未分类弱化，但仍保持 chip 形态 */
 .grey-chip {
 
-  background-image: linear-gradient(to right, #f1f5f9 0%, #3f3f3f 100%) !important;
+  background-image: linear-gradient(to right, #c0a7e0 0%, #7f00fd 100%) !important;
 }
 
 @media (max-width: 980px) {
