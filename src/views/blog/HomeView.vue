@@ -128,7 +128,7 @@ onMounted(() => {
                                                               class="typing-cursor"></span></p>
 
         <div class="hero-actions">
-          <a href="#latest-posts" class="hero-button primary">
+          <RouterLink to="/posts" class="hero-button primary">
             <svg class="hero-button-icon down-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="currentColor"
@@ -136,7 +136,7 @@ onMounted(() => {
               />
             </svg>
             <span>开始阅读</span>
-          </a>
+          </RouterLink>
 
           <RouterLink to="/repositories" class="hero-button ghost">
             <svg class="hero-button-icon fork-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -200,18 +200,14 @@ onMounted(() => {
           </a>
         </div>
       </div>
-      <a href="#latest-posts" class="hero-scroll-down" aria-label="查看最新文章">
+      <RouterLink to="/posts" class="hero-scroll-down" aria-label="查看最新文章">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
             fill="currentColor"
             d="M7.4 6.2 12 10.8l4.6-4.6L18 7.6l-6 6-6-6 1.4-1.4Zm0 5L12 15.8l4.6-4.6L18 12.6l-6 6-6-6 1.4-1.4Z"
           />
         </svg>
-      </a>
-    </section>
-    <!--临时测试-->
-    <section id="latest-posts" class="latest-posts">
-      <h2>最新文章</h2>
+      </RouterLink>
     </section>
   </main>
 </template>
@@ -516,18 +512,5 @@ onMounted(() => {
     gap: 22px;
     margin-top: 72px;
   }
-}
-
-.latest-posts {
-  min-height: 100vh;
-  padding: 96px 24px;
-  background: #f8fafc;
-  color: #0f172a;
-  text-align: center;
-}
-
-.latest-posts h2 {
-  margin: 0;
-  font-size: 32px;
 }
 </style>
