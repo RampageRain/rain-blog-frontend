@@ -140,14 +140,7 @@ const profileStats: ProfileStat[] = [
 ]
 
 const quoteStyle = {
-  backgroundImage: `
-    linear-gradient(
-      135deg,
-      rgba(15, 23, 42, 0.64),
-      rgba(15, 23, 42, 0.36)
-    ),
-    url(${quoteBg})
-  `
+  backgroundImage: `url(${quoteBg})`
 }
 </script>
 
@@ -156,7 +149,7 @@ const quoteStyle = {
     <BlogNavbar />
 
     <section class="posts-content">
-      <section class="intro-card">
+      <section class="intro-card" :style="quoteStyle">
         <div class="intro-layout">
           <div class="intro-info-panel">
             <div class="avatar-wrapper">
@@ -268,8 +261,8 @@ const quoteStyle = {
             </div>
           </div>
 
-          <div class="intro-image-panel" :style="quoteStyle">
-            <div class="intro-image-mask">
+          <div class="intro-image-panel">
+            <div class="intro-image-content">
               <span class="quote-mark">“</span>
               <p>
                 保持热爱，奔赴山海；在代码的世界里，不断成长。
@@ -345,7 +338,7 @@ const quoteStyle = {
       rgba(0, 0, 0, 0.4),
       rgba(0, 0, 0, 0.4)
     ),
-    url('@/assets/images/home-bg-1.jpg') center / cover fixed no-repeat;
+    url('@/assets/images/postlist-bg.jpg') center / cover fixed no-repeat;
 }
 
 .posts-content {
@@ -365,15 +358,17 @@ const quoteStyle = {
 
   overflow: hidden;
 
-  background: rgba(255, 255, 255, 0.94);
+  background-color: #0f172a;
+  background-size: cover;
+  background-position: center 50%;
+  background-repeat: no-repeat;
   box-shadow: 0 18px 48px rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(16px);
 }
 
 .intro-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 34px;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 0;
   align-items: stretch;
 }
 
@@ -385,6 +380,13 @@ const quoteStyle = {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.76),
+    rgba(255, 255, 255, 0.48)
+  );
+  backdrop-filter: blur(12px);
 }
 
 .avatar-wrapper {
@@ -577,45 +579,32 @@ const quoteStyle = {
 
 .intro-image-panel {
   min-height: 360px;
+  padding: 34px 30px;
 
-  overflow: hidden;
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  box-shadow: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 
-.intro-image-mask {
-  width: 100%;
-  height: 100%;
-  padding: 34px;
-
+.intro-image-content {
+  width: min(100%, 280px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(15, 23, 42, 0.08),
-      rgba(15, 23, 42, 0.72)
-    );
 }
 
 .quote-mark {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 54px;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 4px 14px rgba(15, 23, 42, 0.42);
+  text-shadow: 0 4px 14px rgba(15, 23, 42, 0.36);
 }
 
-.intro-image-mask p {
+.intro-image-content p {
   margin: 8px 0 0;
 
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.96);
   font-size: 17px;
   line-height: 1.9;
   text-shadow: 0 3px 12px rgba(15, 23, 42, 0.5);
@@ -750,7 +739,7 @@ const quoteStyle = {
   width: 100%;
   height: auto;
   display: block;
-  
+
   object-fit: contain;
   object-position: center;
 
@@ -899,12 +888,12 @@ const quoteStyle = {
 }
 
 @media (max-width: 980px) {
-  .intro-main {
+  .intro-layout {
     grid-template-columns: 1fr;
   }
 
-  .intro-quote {
-    min-height: auto;
+  .intro-image-panel {
+    min-height: 220px;
   }
 
   .posts-container {
@@ -922,13 +911,8 @@ const quoteStyle = {
     padding-bottom: 64px;
   }
 
-  .intro-card {
+  .intro-info-panel {
     padding: 30px 22px;
-  }
-
-  .intro-left {
-    flex-direction: column;
-    text-align: center;
   }
 
   .avatar-wrapper {
