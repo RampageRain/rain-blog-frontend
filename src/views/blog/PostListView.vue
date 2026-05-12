@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import {Icon} from '@iconify/vue'
+import {onBeforeUnmount, onMounted, ref} from 'vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 
@@ -157,7 +157,6 @@ const quoteStyle = {
   backgroundImage: `url(${quoteBg})`
 }
 
-const signatureText = '保持热爱，奔赴山海；在代码的世界里，不断成长。'
 const signatureDisplayText = '保持热爱，奔赴山海；在代码的世界里，不断成长。'
 const displayedSignature = ref('')
 const isSignatureTyping = ref(false)
@@ -197,14 +196,14 @@ onBeforeUnmount(() => {
 
 <template>
   <div :id="props.sectionId" :class="['posts-page', { 'is-embedded': props.embedded }]">
-    <BlogNavbar v-if="!props.embedded" />
+    <BlogNavbar v-if="!props.embedded"/>
 
     <section class="posts-content">
       <section class="intro-card" :style="quoteStyle">
         <div class="intro-layout">
           <div class="intro-info-panel">
             <div class="avatar-wrapper">
-              <img class="intro-avatar" :src="avatar" alt="Rain Blog" />
+              <img class="intro-avatar" :src="avatar" alt="Rain Blog"/>
             </div>
 
             <div class="intro-basic">
@@ -229,8 +228,8 @@ onBeforeUnmount(() => {
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
-              <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11z" />
-              <circle cx="12" cy="10" r="2.2" />
+              <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11z"/>
+              <circle cx="12" cy="10" r="2.2"/>
             </svg>
 
             <svg
@@ -238,9 +237,9 @@ onBeforeUnmount(() => {
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
-              <path d="M5 5.5h11.5a2.5 2.5 0 0 1 0 5H5z" />
-              <path d="M5 10.5h10.5a2.5 2.5 0 0 1 0 5H5z" />
-              <path d="M5 15.5h9a2.5 2.5 0 0 1 0 5H5z" />
+              <path d="M5 5.5h11.5a2.5 2.5 0 0 1 0 5H5z"/>
+              <path d="M5 10.5h10.5a2.5 2.5 0 0 1 0 5H5z"/>
+              <path d="M5 15.5h9a2.5 2.5 0 0 1 0 5H5z"/>
             </svg>
 
             <svg
@@ -248,9 +247,9 @@ onBeforeUnmount(() => {
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
-              <path d="m9 7-5 5 5 5" />
-              <path d="m15 7 5 5-5 5" />
-              <path d="m13 5-2 14" />
+              <path d="m9 7-5 5 5 5"/>
+              <path d="m15 7 5 5-5 5"/>
+              <path d="m13 5-2 14"/>
             </svg>
 
             <span>{{ meta.text }}</span>
@@ -300,7 +299,8 @@ onBeforeUnmount(() => {
               <span class="quote-mark">“</span>
               <p class="intro-quote-text">
                 保持热爱，奔赴山海；在代码的世界里，不断成长。
-                <span class="intro-quote-live">{{ displayedSignature }}</span><span v-if="isSignatureTyping" class="typing-cursor"></span></p>
+                <span class="intro-quote-live">{{ displayedSignature }}</span><span
+                v-if="isSignatureTyping" class="typing-cursor"></span></p>
             </div>
           </div>
         </div>
@@ -313,7 +313,12 @@ onBeforeUnmount(() => {
           class="post-card"
         >
           <div class="post-cover">
-            <img :src="post.cover" :alt="post.title" />
+            <div
+              class="post-cover-backdrop"
+              :style="{ backgroundImage: `url(${post.cover})` }"
+              aria-hidden="true"
+            ></div>
+            <img :src="post.cover" :alt="post.title"/>
 
             <div class="post-cover-mask">
               <h2 class="post-cover-title">
@@ -367,12 +372,11 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   padding-top: 96px;
 
-  background:
-    linear-gradient(
-      rgba(0, 0, 0, 0.4),
-      rgba(0, 0, 0, 0.4)
-    ),
-    url('@/assets/images/postlist-bg.jpg') center / cover fixed no-repeat;
+  background: linear-gradient(
+    rgba(0, 0, 0, 0.4),
+    rgba(0, 0, 0, 0.4)
+  ),
+  url('@/assets/images/postlist-bg.jpg') center / cover fixed no-repeat;
 }
 
 .posts-page.is-embedded {
@@ -443,9 +447,8 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 
   background: rgba(226, 232, 240, 0.86);
-  box-shadow:
-    0 14px 34px rgba(15, 23, 42, 0.16),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16),
+  inset 0 0 0 1px rgba(255, 255, 255, 0.85);
 }
 
 .avatar-wrapper::after {
@@ -553,20 +556,17 @@ onBeforeUnmount(() => {
   gap: 12px;
 
   background: rgba(248, 250, 252, 0.8);
-  box-shadow:
-    inset 0 0 0 1px rgba(226, 232, 240, 0.9),
-    0 10px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.9),
+  0 10px 24px rgba(15, 23, 42, 0.06);
 
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease,
+  box-shadow 0.2s ease;
 }
 
 .profile-stat:hover {
   transform: translateY(-2px);
-  box-shadow:
-    inset 0 0 0 1px rgba(99, 102, 241, 0.22),
-    0 14px 30px rgba(15, 23, 42, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.22),
+  0 14px 30px rgba(15, 23, 42, 0.1);
 }
 
 .stat-icon {
@@ -580,15 +580,13 @@ onBeforeUnmount(() => {
 
   color: rgba(15, 23, 42, 0.72);
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(248, 250, 252, 0.96),
-      rgba(226, 232, 240, 0.72)
-    );
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.82),
-    0 6px 18px rgba(15, 23, 42, 0.08);
+  background: linear-gradient(
+    135deg,
+    rgba(248, 250, 252, 0.96),
+    rgba(226, 232, 240, 0.72)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.82),
+  0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
 .stat-icon svg {
@@ -647,9 +645,8 @@ onBeforeUnmount(() => {
   font-size: 54px;
   font-weight: 900;
   line-height: 1;
-  text-shadow:
-    0 3px 10px rgba(15, 23, 42, 0.44),
-    0 8px 20px rgba(15, 23, 42, 0.2);
+  text-shadow: 0 3px 10px rgba(15, 23, 42, 0.44),
+  0 8px 20px rgba(15, 23, 42, 0.2);
 }
 
 .intro-quote-text {
@@ -665,9 +662,8 @@ onBeforeUnmount(() => {
   font-weight: 400;
   letter-spacing: 0;
   font-family: inherit;
-  text-shadow:
-    0 2px 8px rgba(15, 23, 42, 0.5),
-    0 6px 18px rgba(15, 23, 42, 0.34);
+  text-shadow: 0 2px 8px rgba(15, 23, 42, 0.5),
+  0 6px 18px rgba(15, 23, 42, 0.34);
 }
 
 .typing-cursor {
@@ -712,20 +708,17 @@ onBeforeUnmount(() => {
   gap: 18px;
 
   background: rgba(248, 250, 252, 0.8);
-  box-shadow:
-    inset 0 0 0 1px rgba(226, 232, 240, 0.9),
-    0 10px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.9),
+  0 10px 24px rgba(15, 23, 42, 0.06);
 
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease,
+  box-shadow 0.2s ease;
 }
 
 .profile-stat:hover {
   transform: translateY(-2px);
-  box-shadow:
-    inset 0 0 0 1px rgba(99, 102, 241, 0.22),
-    0 14px 30px rgba(15, 23, 42, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.22),
+  0 14px 30px rgba(15, 23, 42, 0.1);
 }
 
 .stat-icon {
@@ -739,15 +732,13 @@ onBeforeUnmount(() => {
 
   color: #1d4ed8;
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(219, 234, 254, 0.86)
-    );
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.82),
-    0 10px 22px rgba(37, 99, 235, 0.16);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(219, 234, 254, 0.86)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.82),
+  0 10px 22px rgba(37, 99, 235, 0.16);
 }
 
 .stat-icon :deep(svg) {
@@ -791,33 +782,56 @@ onBeforeUnmount(() => {
   flex-direction: column;
 
   background: rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 15px 35px rgba(50, 50, 93, 0.1),
-    0 5px 15px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1),
+  0 5px 15px rgba(0, 0, 0, 0.07);
   backdrop-filter: blur(10px);
 
-  transition:
-    transform 0.22s ease,
-    box-shadow 0.22s ease;
+  transition: transform 0.22s ease,
+  box-shadow 0.22s ease;
 }
 
 .post-card:hover {
   transform: translateY(-5px);
-  box-shadow:
-    0 18px 38px rgba(50, 50, 93, 0.14),
-    0 8px 18px rgba(0, 0, 0, 0.09);
+  box-shadow: 0 18px 38px rgba(50, 50, 93, 0.14),
+  0 8px 18px rgba(0, 0, 0, 0.09);
 }
 
 .post-cover {
   position: relative;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   border-radius: 8px 8px 0 0;
 }
 
+.post-cover-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform: scale(1.08);
+  filter: blur(16px);
+}
+
+.post-cover-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.2);
+}
+
 .post-cover img {
+  position: relative;
+  z-index: 1;
+
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
 
   object-fit: contain;
@@ -836,13 +850,12 @@ onBeforeUnmount(() => {
 
   padding: 46px 18px 18px;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(15, 23, 42, 0),
-      rgba(15, 23, 42, 0.62) 42%,
-      rgba(15, 23, 42, 0.86)
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0),
+    rgba(15, 23, 42, 0.62) 42%,
+    rgba(15, 23, 42, 0.86)
+  );
 }
 
 .post-cover-title {
