@@ -5,6 +5,7 @@ import { Icon } from '@iconify/vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import PostListView from '@/views/blog/PostListView.vue'
+import ContactPopup from '@/components/blog/ContactPopup.vue'
 
 import homeBg1 from '@/assets/images/home-bg-1.jpg'
 import homeBg2 from '@/assets/images/home-bg-2.jpg'
@@ -14,6 +15,9 @@ import homeBg5 from '@/assets/images/home-bg-5.jpg'
 import homeBg6 from '@/assets/images/home-bg-6.jpg'
 import homeBg7 from '@/assets/images/home-bg-7.jpg'
 import homeBg8 from '@/assets/images/home-bg-8.jpg'
+
+import wechatQrCode from '@/assets/images/contact/wechat-qrcode.png'
+import qqQrCode from '@/assets/images/contact/qq-qrcode.png'
 
 const backgroundImages = [
   homeBg1,
@@ -141,6 +145,38 @@ onMounted(() => {
 onBeforeUnmount(() => {
   clearTypingTimers()
 })
+
+const contactPopupVisible = ref(false)
+
+const contactPopup = ref({
+  title: '',
+  account: '',
+  qrCode: ''
+})
+
+function openWechatPopup() {
+  contactPopup.value = {
+    title: '微信联系',
+    account: 'Rain119813',
+    qrCode: wechatQrCode
+  }
+
+  contactPopupVisible.value = true
+}
+
+function openQQPopup() {
+  contactPopup.value = {
+    title: 'QQ 联系',
+    account: '1192924906',
+    qrCode: qqQrCode
+  }
+
+  contactPopupVisible.value = true
+}
+
+function closeContactPopup() {
+  contactPopupVisible.value = false
+}
 </script>
 
 <template>
@@ -203,6 +239,7 @@ onBeforeUnmount(() => {
             class="social-link"
             data-tooltip="查看微信联系方式"
             aria-label="查看微信联系方式"
+            @click="openWechatPopup"
           >
             <Icon class="social-icon" icon="simple-icons:wechat" />
           </button>
@@ -212,6 +249,7 @@ onBeforeUnmount(() => {
             class="social-link"
             data-tooltip="查看 QQ 联系方式"
             aria-label="查看 QQ 联系方式"
+            @click="openQQPopup"
           >
             <Icon class="social-icon qq-icon" icon="simple-icons:tencentqq" />
           </button>
@@ -240,6 +278,13 @@ onBeforeUnmount(() => {
     </section>
 
     <PostListView embedded section-id="home-posts" />
+    <ContactPopup
+      :visible="contactPopupVisible"
+      :title="contactPopup.title"
+      :account="contactPopup.account"
+      :qr-code="contactPopup.qrCode"
+      @close="closeContactPopup"
+    />
   </main>
 </template>
 
