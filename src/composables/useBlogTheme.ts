@@ -2,26 +2,25 @@ import { computed, ref } from 'vue'
 
 type BlogTheme = 'night' | 'light'
 
-const STORAGE_KEY = 'rain_blog_theme'
+const DAY_START_HOUR = 6
+const NIGHT_START_HOUR = 18
+const THEME_SYNC_INTERVAL = 60 * 1000
 
-const theme = ref<BlogTheme>(readTheme())
+function getSystemTheme(date = new Date()): BlogTheme {
+  const hour = date.getHours()
 
-function readTheme(): BlogTheme {
-  if (typeof window === 'undefined') {
-    return 'night'
-  }
-
-  const savedTheme = window.localStorage.getItem(STORAGE_KEY)
-
-  return savedTheme === 'light' ? 'light' : 'night'
+  return hour >= DAY_START_HOUR && hour < NIGHT_START_HOUR ? 'light' : 'night'
 }
 
-function persistTheme(nextTheme: BlogTheme) {
-  if (typeof window === 'undefined') {
-    return
-  }
+const theme = ref<BlogTheme>(getSystemTheme())
 
-  window.localStorage.setItem(STORAGE_KEY, nextTheme)
+function syncThemeWithSystemTime() {
+  theme.value = getSystemTheme()
+}
+
+if (typeof window !== 'undefined') {
+  syncThemeWithSystemTime()
+  window.setInterval(syncThemeWithSystemTime, THEME_SYNC_INTERVAL)
 }
 
 export function useBlogTheme() {
@@ -29,19 +28,8 @@ export function useBlogTheme() {
     return theme.value === 'light'
   })
 
-  function setTheme(nextTheme: BlogTheme) {
-    theme.value = nextTheme
-    persistTheme(nextTheme)
-  }
-
-  function toggleTheme() {
-    setTheme(theme.value === 'night' ? 'light' : 'night')
-  }
-
   return {
     theme,
-    isLightTheme,
-    setTheme,
-    toggleTheme
+    isLightTheme
   }
 }

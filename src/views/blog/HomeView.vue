@@ -15,11 +15,13 @@ import homeBg5 from '@/assets/images/home-bg-5.jpg'
 import homeBg6 from '@/assets/images/home-bg-6.jpg'
 import homeBg7 from '@/assets/images/home-bg-7.jpg'
 import homeBg8 from '@/assets/images/home-bg-8.jpg'
+import homeBgMobile1 from '@/assets/images/home-bg-mobile-1.jpg'
+import loginBgMobile from '@/assets/images/login-bg-mobile.jpg'
 
 import wechatQrCode from '@/assets/images/contact/wechat-qrcode.png'
 import qqQrCode from '@/assets/images/contact/qq-qrcode.png'
 
-const backgroundImages = [
+const desktopBackgroundImages = [
   homeBg1,
   homeBg2,
   homeBg3,
@@ -30,34 +32,75 @@ const backgroundImages = [
   homeBg8
 ]
 
-function getRandomIndex(excludeIndex?: number) {
-  if (backgroundImages.length <= 1) {
+const mobileBackgroundImages = [
+  loginBgMobile,
+  homeBgMobile1
+]
+
+const desktopBackgroundStorageKey = 'rain_blog_home_bg_index'
+const mobileBackgroundStorageKey = 'rain_blog_home_mobile_bg_index'
+const heroMobileMedia = '(max-width: 800px)'
+
+function readIsMobileHero() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.matchMedia(heroMobileMedia).matches
+}
+
+const isMobileHero = ref(readIsMobileHero())
+
+const activeBackgroundImages = computed(() => {
+  return isMobileHero.value ? mobileBackgroundImages : desktopBackgroundImages
+})
+
+function getBackgroundStorageKey() {
+  return isMobileHero.value ? mobileBackgroundStorageKey : desktopBackgroundStorageKey
+}
+
+function readLastIndex(images: string[], storageKey: string) {
+  const lastIndexText = sessionStorage.getItem(storageKey)
+  const parsedLastIndex = Number(lastIndexText)
+
+  return lastIndexText === null ||
+    Number.isNaN(parsedLastIndex) ||
+    parsedLastIndex < 0 ||
+    parsedLastIndex >= images.length
+    ? undefined
+    : parsedLastIndex
+}
+
+function getRandomIndex(images: string[], excludeIndex?: number) {
+  if (images.length <= 1) {
     return 0
   }
 
-  let index = Math.floor(Math.random() * backgroundImages.length)
+  let index = Math.floor(Math.random() * images.length)
 
   while (index === excludeIndex) {
-    index = Math.floor(Math.random() * backgroundImages.length)
+    index = Math.floor(Math.random() * images.length)
   }
 
   return index
 }
 
-const lastIndexText = sessionStorage.getItem('rain_blog_home_bg_index')
-const parsedLastIndex = Number(lastIndexText)
-const lastIndex =
-  lastIndexText === null || Number.isNaN(parsedLastIndex)
-    ? undefined
-    : parsedLastIndex
+function persistCurrentBackgroundIndex() {
+  sessionStorage.setItem(getBackgroundStorageKey(), String(currentIndex.value))
+}
 
-const currentIndex = ref(getRandomIndex(lastIndex))
+const initialImages = activeBackgroundImages.value
+const currentIndex = ref(
+  getRandomIndex(initialImages, readLastIndex(initialImages, getBackgroundStorageKey()))
+)
 
 const currentBackground = computed(() => {
-  return backgroundImages[currentIndex.value]
+  const images = activeBackgroundImages.value
+
+  return images[currentIndex.value] ?? images[0]
 })
 
-sessionStorage.setItem('rain_blog_home_bg_index', String(currentIndex.value))
+persistCurrentBackgroundIndex()
 
 const heroStyle = computed(() => {
   return {
@@ -72,8 +115,22 @@ const heroStyle = computed(() => {
 })
 
 function refreshHeroBackground() {
-  currentIndex.value = getRandomIndex(currentIndex.value)
-  sessionStorage.setItem('rain_blog_home_bg_index', String(currentIndex.value))
+  currentIndex.value = getRandomIndex(activeBackgroundImages.value, currentIndex.value)
+  persistCurrentBackgroundIndex()
+}
+
+function syncHeroBackgroundForViewport(matches: boolean) {
+  if (isMobileHero.value === matches) {
+    return
+  }
+
+  isMobileHero.value = matches
+
+  const images = activeBackgroundImages.value
+  const lastIndex = readLastIndex(images, getBackgroundStorageKey())
+
+  currentIndex.value = getRandomIndex(images, lastIndex)
+  persistCurrentBackgroundIndex()
 }
 
 function scrollToPosts() {
@@ -89,6 +146,7 @@ const isTyping = ref(false)
 
 let subtitleIntervalId: number | undefined
 let subtitlePauseTimeoutId: number | undefined
+let heroMediaQuery: MediaQueryList | undefined
 
 function clearTypingTimers() {
   if (subtitleIntervalId !== undefined) {
@@ -138,12 +196,21 @@ function startTypingSubtitle() {
   }, 110)
 }
 
+function handleHeroMediaChange(event: MediaQueryListEvent) {
+  syncHeroBackgroundForViewport(event.matches)
+}
+
 onMounted(() => {
+  heroMediaQuery = window.matchMedia(heroMobileMedia)
+  syncHeroBackgroundForViewport(heroMediaQuery.matches)
+  heroMediaQuery.addEventListener('change', handleHeroMediaChange)
+
   startTypingSubtitle()
 })
 
 onBeforeUnmount(() => {
   clearTypingTimers()
+  heroMediaQuery?.removeEventListener('change', handleHeroMediaChange)
 })
 
 const contactPopupVisible = ref(false)

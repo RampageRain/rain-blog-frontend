@@ -2,7 +2,6 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import { useBlogTheme } from '@/composables/useBlogTheme'
 import { useAuthStore } from '@/stores/auth'
 
 import catStarLogo from '@/assets/images/cat-star-logo.png'
@@ -11,8 +10,6 @@ import mobileDrawerBg from '@/assets/images/intro-card-img.jpg'
 
 const authStore = useAuthStore()
 const route = useRoute()
-
-const { isLightTheme, toggleTheme } = useBlogTheme()
 
 const mobileMenuOpen = ref(false)
 
@@ -162,39 +159,6 @@ onUnmounted(() => {
         </svg>
         <span>后台</span>
       </RouterLink>
-
-      <button
-        type="button"
-        class="nav-item theme-toggle"
-        :class="{ 'nav-active': isLightTheme }"
-        @click="toggleTheme"
-        :aria-label="isLightTheme ? '切换到夜间模式' : '切换到日间模式'"
-        :title="isLightTheme ? '切换到夜间模式' : '切换到日间模式'"
-      >
-        <svg
-          v-if="isLightTheme"
-          class="nav-icon theme-icon"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            fill="currentColor"
-            d="M12 7.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm0-5.2a1 1 0 0 1 1 1v2.1h-2V3a1 1 0 0 1 1-1Zm0 16.9h1V21a1 1 0 1 1-2 0v-2.1h1ZM3 11h2.1v2H3a1 1 0 1 1 0-2Zm15.9 0H21a1 1 0 1 1 0 2h-2.1v-2ZM4.22 5.64a1 1 0 0 1 1.42 0l1.48 1.49-1.41 1.41-1.49-1.48a1 1 0 0 1 0-1.42Zm12.66 12.66 1.41-1.42 1.49 1.49a1 1 0 1 1-1.42 1.41l-1.48-1.48ZM18.36 4.22a1 1 0 1 1 1.42 1.42l-1.49 1.48-1.41-1.41 1.48-1.49ZM5.64 19.78a1 1 0 0 1-1.42-1.41l1.49-1.49 1.41 1.42-1.48 1.48Z"
-          />
-        </svg>
-
-        <svg
-          v-else
-          class="nav-icon theme-icon moon-icon"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            fill="currentColor"
-            d="M13.3 3.1a8.4 8.4 0 0 0 7.6 11.5A9.6 9.6 0 1 1 13.3 3.1Z"
-          />
-        </svg>
-      </button>
     </nav>
 
     <button
@@ -390,19 +354,6 @@ onUnmounted(() => {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-}
-
-.theme-icon {
-  width: 18px;
-  height: 18px;
-  display: block;
-  transition:
-    transform 0.25s ease,
-    opacity 0.25s ease;
-}
-
-.moon-icon {
-  transform: scale(0.95) translateX(0.5px);
 }
 
 .nav-item:hover {
