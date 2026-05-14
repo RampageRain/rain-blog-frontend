@@ -6,7 +6,11 @@
       </p>
 
       <p class="footer-meta">
-        Powered by Vue · Inspired by Matery · Designed by Rain
+        <span>Powered by Vue</span>
+        <span class="footer-meta-divider" aria-hidden="true">&middot;</span>
+        <span>Inspired by Matery</span>
+        <span class="footer-meta-divider" aria-hidden="true">&middot;</span>
+        <span>Designed by Rain</span>
       </p>
     </div>
   </footer>
@@ -50,19 +54,37 @@
 .footer-meta {
   margin: 8px 0 0;
 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
   color: rgba(255, 255, 255, 0.62);
   font-size: 13px;
 }
 
+.footer-meta-divider {
+  color: rgba(255, 255, 255, 0.44);
+}
+
 @media (max-width: 640px) {
   .blog-footer {
-    min-height: 96px;
-    padding: 22px 20px;
+    min-height: 126px;
+    padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
   }
 
   .footer-meta {
-    line-height: 1.7;
+    width: 168px;
+
+    flex-direction: column;
+    gap: 4px;
+
+    line-height: 1.45;
     text-align: center;
+  }
+
+  .footer-meta-divider {
+    display: none;
   }
 }
 </style>
