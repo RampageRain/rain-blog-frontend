@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {Icon} from '@iconify/vue'
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
+import BackTop from '@/components/blog/BackTop.vue'
 import { useBlogTheme } from '@/composables/useBlogTheme'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
@@ -116,6 +117,127 @@ const posts: Post[] = [
     date: '2026-05-05',
     views: 1500,
     cover: postCover6
+  },
+  {
+    id: 7,
+    title: 'Nginx Reverse Proxy Guide',
+    summary:
+      'Notes on Nginx reverse proxy, static cache strategy, and HTTPS certificate deployment for split frontend/backend apps.',
+    category: 'Backend',
+    tags: ['Nginx', 'HTTPS', 'Deploy'],
+    date: '2026-05-04',
+    views: 980,
+    cover: postCover1
+  },
+  {
+    id: 8,
+    title: 'Pinia Store Patterns',
+    summary:
+      'Practical notes on module splitting, persistence, async actions, and type inference in Vue 3 projects.',
+    category: 'Frontend',
+    tags: ['Vue 3', 'Pinia', 'TypeScript'],
+    date: '2026-05-04',
+    views: 768,
+    cover: postCover2
+  },
+  {
+    id: 9,
+    title: 'JWT Auth Flow Notes',
+    summary:
+      'A complete walkthrough from login, token issuing, token refresh, to API authorization in frontend/backend apps.',
+    category: 'Backend',
+    tags: ['JWT', 'Auth', 'Security'],
+    date: '2026-05-03',
+    views: 1124,
+    cover: postCover3
+  },
+  {
+    id: 10,
+    title: 'Comment System Design',
+    summary:
+      'Design notes for comments, nested replies, sensitive word filtering, and notification workflows.',
+    category: 'Design',
+    tags: ['Comment', 'Design'],
+    date: '2026-05-03',
+    views: 689,
+    cover: postCover4
+  },
+  {
+    id: 11,
+    title: 'Elasticsearch Search Integration',
+    summary:
+      'Implement full-text search for titles, summaries, and tags with index design, Chinese analysis, and highlights.',
+    category: 'Search',
+    tags: ['Elasticsearch', 'Search', 'Analyzer'],
+    date: '2026-05-02',
+    views: 834,
+    cover: postCover5
+  },
+  {
+    id: 12,
+    title: 'Frontend Performance Checklist',
+    summary:
+      'A checklist for bundle splitting, image compression, lazy loading, cache strategy, and first screen rendering.',
+    category: 'Frontend',
+    tags: ['Performance', 'Vite', 'Lazy Load'],
+    date: '2026-05-02',
+    views: 1260,
+    cover: postCover6
+  },
+  {
+    id: 13,
+    title: 'GitHub Actions Deployment',
+    summary:
+      'Use GitHub Actions to build frontend assets, upload artifacts, and publish to the server automatically.',
+    category: 'DevOps',
+    tags: ['GitHub Actions', 'CI/CD'],
+    date: '2026-05-01',
+    views: 705,
+    cover: postCover1
+  },
+  {
+    id: 14,
+    title: 'API Rate Limiting Strategy',
+    summary:
+      'Compare IP, user, and route based rate limits with Redis counters and token bucket scenarios.',
+    category: 'Backend',
+    tags: ['Rate Limit', 'Redis', 'Security'],
+    date: '2026-05-01',
+    views: 903,
+    cover: postCover2
+  },
+  {
+    id: 15,
+    title: 'Spring Security ??????',
+    summary:
+      '??????????????????????????????????',
+    category: '????',
+    tags: ['Spring Security', '??', '??'],
+    date: '2026-04-30',
+    views: 1018,
+    cover: postCover3
+  },
+  {
+    id: 16,
+    title: 'Vue ?????????',
+    summary:
+      '??????????????props ?????????????????',
+    category: '????',
+    tags: ['Vue 3', '????', '??'],
+    date: '2026-04-30',
+    views: 876,
+    cover: postCover4
+  },
+  {
+    id: 17,
+    title: '??????????',
+    summary:
+      '???????????????????????????????????',
+    category: '????',
+    tags: ['??', '??', '??'],
+    date: '2026-04-29',
+    views: 642,
+    cover: postCover5
   }
 ]
 
@@ -163,6 +285,77 @@ const quoteStyle = {
 
 const { isLightTheme } = useBlogTheme()
 
+const firstPagePostCount = 6
+const otherPagePostCount = 9
+const currentPage = ref(1)
+const postsContainerRef = ref<HTMLElement | null>(null)
+
+const isMobilePostList = ref(false)
+
+const showIntroCard = computed(() => {
+  return !isMobilePostList.value && currentPage.value === 1
+})
+
+const firstPageCapacity = computed(() => {
+  return isMobilePostList.value ? otherPagePostCount : firstPagePostCount
+})
+
+const currentPageCapacity = computed(() => {
+  return showIntroCard.value ? firstPagePostCount : otherPagePostCount
+})
+
+const totalPages = computed(() => {
+  const remainingPosts = Math.max(0, posts.length - firstPageCapacity.value)
+
+  return 1 + Math.ceil(remainingPosts / otherPagePostCount)
+})
+
+const paginatedPosts = computed(() => {
+  if (currentPage.value === 1) {
+    return posts.slice(0, firstPageCapacity.value)
+  }
+
+  const start = firstPageCapacity.value + (currentPage.value - 2) * otherPagePostCount
+
+  return posts.slice(start, start + otherPagePostCount)
+})
+
+const postPlaceholders = computed(() => {
+  return Array.from(
+    { length: Math.max(0, currentPageCapacity.value - paginatedPosts.value.length) },
+    (_, index) => index
+  )
+})
+
+async function scrollToPostsContainer() {
+  await nextTick()
+
+  const targetElement = postsContainerRef.value
+
+  if (!targetElement) {
+    return
+  }
+
+  const navbarHeight = isMobilePostList.value ? 60 : 64
+  const overlapOffset = isMobilePostList.value ? 28 : 24
+  const targetTop =
+    targetElement.getBoundingClientRect().top + window.scrollY - navbarHeight + overlapOffset
+
+  window.scrollTo({
+    top: targetTop,
+    behavior: 'smooth'
+  })
+}
+
+function setCurrentPage(page: number) {
+  if (page < 1 || page > totalPages.value || page === currentPage.value) {
+    return
+  }
+
+  currentPage.value = page
+  void scrollToPostsContainer()
+}
+
 const pageStyle = computed(() => {
   const currentBackground = isLightTheme.value ? postListBgLight : postListBgNight
   const overlayStart = isLightTheme.value
@@ -188,6 +381,7 @@ const displayedSignature = ref('')
 const isSignatureTyping = ref(false)
 
 let signatureIntervalId: number | undefined
+let mobilePostListMediaQuery: MediaQueryList | undefined
 
 function startTypingSignature() {
   let index = 0
@@ -209,7 +403,15 @@ function startTypingSignature() {
   }, 120)
 }
 
+function handleMobilePostListChange(event: MediaQueryListEvent) {
+  isMobilePostList.value = event.matches
+}
+
 onMounted(() => {
+  mobilePostListMediaQuery = window.matchMedia('(max-width: 800px)')
+  isMobilePostList.value = mobilePostListMediaQuery.matches
+  mobilePostListMediaQuery.addEventListener('change', handleMobilePostListChange)
+
   startTypingSignature()
 })
 
@@ -217,6 +419,8 @@ onBeforeUnmount(() => {
   if (signatureIntervalId !== undefined) {
     window.clearInterval(signatureIntervalId)
   }
+
+  mobilePostListMediaQuery?.removeEventListener('change', handleMobilePostListChange)
 })
 </script>
 
@@ -236,7 +440,7 @@ onBeforeUnmount(() => {
     <BlogNavbar v-if="!props.embedded"/>
 
     <section class="posts-content">
-      <section class="intro-card" :style="quoteStyle">
+      <section v-if="showIntroCard" class="intro-card" :style="quoteStyle">
         <div class="intro-layout">
           <div class="intro-info-panel">
             <div class="avatar-wrapper">
@@ -343,9 +547,9 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
-      <section class="posts-container">
+      <section ref="postsContainerRef" class="posts-container">
         <article
-          v-for="post in posts"
+          v-for="post in paginatedPosts"
           :key="post.id"
           class="post-card"
         >
@@ -398,9 +602,63 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </article>
+
+        <article
+          v-for="index in postPlaceholders"
+          :key="`placeholder-${index}`"
+          class="post-card post-card-placeholder"
+          aria-hidden="true"
+        ></article>
+      </section>
+
+      <section
+        v-if="totalPages > 1"
+        class="pagination-section"
+        aria-label="Post pagination"
+      >
+        <div class="pagination-control pagination-control-prev">
+          <button
+            type="button"
+            class="pagination-button pagination-prev"
+            :disabled="currentPage === 1"
+            aria-label="Previous page"
+            @click="setCurrentPage(currentPage - 1)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M15.4 6.2 10.8 12l4.6 5.8L13.8 19 8 12l5.8-7 1.6 1.2Z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="pagination-info">
+          <span>{{ currentPage }}</span>
+          <em>/</em>
+          <span>{{ totalPages }}</span>
+        </div>
+
+        <div class="pagination-control pagination-control-next">
+          <button
+            type="button"
+            class="pagination-button pagination-next"
+            :disabled="currentPage === totalPages"
+            aria-label="Next page"
+            @click="setCurrentPage(currentPage + 1)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M8.6 17.8 13.2 12 8.6 6.2 10.2 5 16 12l-5.8 7-1.6-1.2Z"
+              />
+            </svg>
+          </button>
+        </div>
       </section>
     </section>
     <BlogFooter/>
+    <BackTop/>
   </div>
 </template>
 
@@ -446,6 +704,12 @@ onBeforeUnmount(() => {
   --theme-divider: rgb(139 139 139 / 0.2);
   --theme-chip-bg: linear-gradient(to right, #60d0df 0%, #0101fe 100%);
   --theme-muted-chip-bg: linear-gradient(to right, #60d0df 0%, #5454b6 100%);
+  --theme-pagination-button-bg: linear-gradient(135deg, #60d0df 0%, #0101fe 100%);
+  --theme-pagination-button-shadow: 0 14px 28px rgba(1, 1, 254, 0.22);
+  --theme-pagination-disabled-bg: rgba(203, 213, 225, 0.82);
+  --theme-pagination-disabled-color: rgba(100, 116, 139, 0.72);
+  --theme-pagination-info-text: #475569;
+  --post-card-min-height: 360px;
 
   position: relative;
   min-height: 100vh;
@@ -499,6 +763,11 @@ onBeforeUnmount(() => {
   --theme-divider: rgba(226, 232, 240, 0.16);
   --theme-chip-bg: linear-gradient(to right, #38bdf8 0%, #2563eb 100%);
   --theme-muted-chip-bg: linear-gradient(to right, #38bdf8 0%, #475569 100%);
+  --theme-pagination-button-bg: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  --theme-pagination-button-shadow: 0 14px 30px rgba(14, 165, 233, 0.2);
+  --theme-pagination-disabled-bg: rgba(15, 23, 42, 0.54);
+  --theme-pagination-disabled-color: rgba(203, 213, 225, 0.42);
+  --theme-pagination-info-text: rgba(226, 232, 240, 0.9);
 }
 
 .posts-page.is-embedded {
@@ -516,7 +785,7 @@ onBeforeUnmount(() => {
 
   width: min(1180px, calc(100% - 48px));
   margin: 0 auto;
-  padding-bottom: 86px;
+  padding-bottom: 15px;
 }
 
 .intro-card {
@@ -886,6 +1155,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border-radius: 8px;
 
+  min-height: var(--post-card-min-height);
+
   display: flex;
   flex-direction: column;
 
@@ -902,6 +1173,95 @@ onBeforeUnmount(() => {
 .post-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--theme-card-hover-shadow);
+}
+
+.post-card-placeholder {
+  min-height: var(--post-card-min-height);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pagination-section {
+  width: 100%;
+  margin: 18px auto -80px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  gap: 28px;
+}
+
+.pagination-control {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-control-prev {
+  justify-content: flex-start;
+}
+
+.pagination-control-next {
+  justify-content: flex-end;
+}
+
+.pagination-button {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+  background: var(--theme-pagination-button-bg);
+  box-shadow: var(--theme-pagination-button-shadow);
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.pagination-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-pagination-button-shadow),
+    0 10px 22px rgba(15, 23, 42, 0.12);
+}
+
+.pagination-button:disabled {
+  color: var(--theme-pagination-disabled-color);
+  background: var(--theme-pagination-disabled-bg);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.pagination-button svg {
+  width: 28px;
+  height: 28px;
+}
+
+.pagination-info {
+  justify-self: center;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  color: var(--theme-pagination-info-text);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+}
+
+.pagination-info em {
+  color: var(--theme-subtle);
+  font-style: normal;
+  font-weight: 600;
 }
 
 .post-cover {
@@ -1088,12 +1448,6 @@ onBeforeUnmount(() => {
   background-image: var(--theme-muted-chip-bg) !important;
 }
 
-@media (max-width: 800px) {
-  .intro-card {
-    display: none;
-  }
-}
-
 @media (max-width: 980px) {
   .intro-layout {
     grid-template-columns: 1fr;
@@ -1103,6 +1457,10 @@ onBeforeUnmount(() => {
     min-height: 220px;
   }
 
+  .posts-page {
+    --post-card-min-height: 340px;
+  }
+
   .posts-container {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1110,6 +1468,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 640px) {
   .posts-page {
+    --post-card-min-height: 0px;
+
     padding-top: 84px;
   }
 
@@ -1119,7 +1479,7 @@ onBeforeUnmount(() => {
 
   .posts-content {
     width: min(100% - 32px, 1180px);
-    padding-bottom: 64px;
+    padding-bottom: 15px;
   }
 
   .intro-info-panel {
@@ -1149,6 +1509,21 @@ onBeforeUnmount(() => {
 
   .posts-container {
     grid-template-columns: 1fr;
+  }
+
+  .post-card-placeholder {
+    display: none;
+  }
+
+  .pagination-section {
+    width: 100%;
+    margin-top: 28px;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .pagination-button {
+    width: 52px;
+    height: 52px;
   }
 
   .post-content {
