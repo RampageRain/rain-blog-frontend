@@ -549,17 +549,28 @@ onBeforeUnmount(() => {
 
       <section ref="postsContainerRef" class="posts-container">
         <article
-          v-for="post in paginatedPosts"
+          v-for="(post, index) in paginatedPosts"
           :key="post.id"
           class="post-card"
         >
           <div class="post-cover">
-            <div
-              class="post-cover-backdrop"
-              :style="{ backgroundImage: `url(${post.cover})` }"
-              aria-hidden="true"
-            ></div>
-            <img :src="post.cover" :alt="post.title"/>
+            <div class="post-cover-backdrop" aria-hidden="true">
+              <img
+                :src="post.cover"
+                alt=""
+                :loading="index < 2 ? 'eager' : 'lazy'"
+                :fetchpriority="index === 0 ? 'high' : 'auto'"
+                decoding="async"
+              />
+            </div>
+            <img
+              class="post-cover-image"
+              :src="post.cover"
+              :alt="post.title"
+              :loading="index < 2 ? 'eager' : 'lazy'"
+              :fetchpriority="index === 0 ? 'high' : 'auto'"
+              decoding="async"
+            />
 
             <div class="post-cover-mask">
               <h2 class="post-cover-title">
@@ -1280,11 +1291,17 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
 
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
   transform: scale(1.08);
   filter: blur(16px);
+}
+
+.post-cover-backdrop img {
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
 }
 
 .post-cover-backdrop::after {
@@ -1294,7 +1311,7 @@ onBeforeUnmount(() => {
   background: var(--theme-cover-tint);
 }
 
-.post-cover img {
+.post-cover-image {
   position: relative;
   z-index: 1;
 
@@ -1308,7 +1325,7 @@ onBeforeUnmount(() => {
   transition: transform 0.3s ease;
 }
 
-.post-card:hover .post-cover img {
+.post-card:hover .post-cover-image {
   transform: scale(1.05);
 }
 
