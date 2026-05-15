@@ -1321,17 +1321,19 @@ onBeforeUnmount(() => {
 
   object-fit: contain;
   object-position: center;
+  transform: scale(1.025);
 
   transition: transform 0.3s ease;
 }
 
 .post-card:hover .post-cover-image {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .post-cover-mask {
   position: absolute;
   inset: auto 0 0;
+  z-index: 2;
 
   padding: 46px 18px 18px;
 
