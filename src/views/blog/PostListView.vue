@@ -6,6 +6,7 @@ import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
 import BackTop from '@/components/blog/BackTop.vue'
 import { useBlogTheme } from '@/composables/useBlogTheme'
+import { getPublishedPosts, type PostListItem } from '@/api/posts'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
 import postCover2 from '@/assets/images/home-bg-2.jpg'
@@ -51,195 +52,66 @@ const props = withDefaults(
   }
 )
 
-const posts: Post[] = [
-  {
-    id: 1,
-    title: 'Spring Boot 3.2 新特性探索',
-    summary:
-      '记录 Spring Boot 3.2 中的一些重要更新与实践，包括性能优化、Starter 配置变化等内容。',
-    category: '后端开发',
-    tags: ['Spring Boot', 'Java', '后端'],
-    date: '2026-05-08',
-    views: 1200,
-    cover: postCover1
-  },
-  {
-    id: 2,
-    title: 'Vue 3 响应式原理理解',
-    summary:
-      '从 ref、computed、watch 到组件通信，系统梳理 Vue 3 响应式开发的核心概念。',
-    category: '前端开发',
-    tags: ['Vue 3', 'TypeScript', '前端'],
-    date: '2026-05-08',
-    views: 856,
-    cover: postCover2
-  },
-  {
-    id: 3,
-    title: 'MySQL 索引优化实战',
-    summary:
-      '通过实际案例理解 MySQL 索引设计、执行计划分析和慢查询优化思路。',
-    category: '数据库',
-    tags: ['MySQL', '索引', '性能优化'],
-    date: '2026-05-07',
-    views: 1100,
-    cover: postCover3
-  },
-  {
-    id: 4,
-    title: 'Redis 缓存在博客系统中的应用',
-    summary:
-      '记录 Redis 在访问统计、登录态保存、热门文章缓存等场景中的使用方式。',
-    category: '缓存中间件',
-    tags: ['Redis', '缓存', '中间件'],
-    date: '2026-05-07',
-    views: 732,
-    cover: postCover4
-  },
-  {
-    id: 5,
-    title: 'Docker 入门到博客部署',
-    summary:
-      '从 Docker 基础概念到前后端分离项目部署，整理容器化部署的核心流程。',
-    category: '运维部署',
-    tags: ['Docker', '部署'],
-    date: '2026-05-06',
-    views: 645,
-    cover: postCover5
-  },
-  {
-    id: 6,
-    title: '设计一个高并发博客系统',
-    summary:
-      '从系统设计角度思考个人博客如何支持高可用、可扩展和高并发访问。',
-    category: '未分类',
+const postCoverMap: Record<string, string> = {
+  'home-bg-1': postCover1,
+  'home-bg-2': postCover2,
+  'home-bg-3': postCover3,
+  'home-bg-4': postCover4,
+  'home-bg-5': postCover5,
+  'home-bg-6': postCover6
+}
+
+const defaultPostCover = postCover1
+
+const postPageSize = 9
+const currentPage = ref(1)
+const totalPages = ref(1)
+const totalPosts = ref(0)
+const posts = ref<Post[]>([])
+const isPostLoading = ref(false)
+const postErrorMessage = ref('')
+
+function toPost(post: PostListItem): Post {
+  return {
+    id: post.id,
+    title: post.title,
+    summary: post.summary,
+    category: post.category,
     tags: [],
-    date: '2026-05-05',
-    views: 1500,
-    cover: postCover6
-  },
-  {
-    id: 7,
-    title: 'Nginx Reverse Proxy Guide',
-    summary:
-      'Notes on Nginx reverse proxy, static cache strategy, and HTTPS certificate deployment for split frontend/backend apps.',
-    category: 'Backend',
-    tags: ['Nginx', 'HTTPS', 'Deploy'],
-    date: '2026-05-04',
-    views: 980,
-    cover: postCover1
-  },
-  {
-    id: 8,
-    title: 'Pinia Store Patterns',
-    summary:
-      'Practical notes on module splitting, persistence, async actions, and type inference in Vue 3 projects.',
-    category: 'Frontend',
-    tags: ['Vue 3', 'Pinia', 'TypeScript'],
-    date: '2026-05-04',
-    views: 768,
-    cover: postCover2
-  },
-  {
-    id: 9,
-    title: 'JWT Auth Flow Notes',
-    summary:
-      'A complete walkthrough from login, token issuing, token refresh, to API authorization in frontend/backend apps.',
-    category: 'Backend',
-    tags: ['JWT', 'Auth', 'Security'],
-    date: '2026-05-03',
-    views: 1124,
-    cover: postCover3
-  },
-  {
-    id: 10,
-    title: 'Comment System Design',
-    summary:
-      'Design notes for comments, nested replies, sensitive word filtering, and notification workflows.',
-    category: 'Design',
-    tags: ['Comment', 'Design'],
-    date: '2026-05-03',
-    views: 689,
-    cover: postCover4
-  },
-  {
-    id: 11,
-    title: 'Elasticsearch Search Integration',
-    summary:
-      'Implement full-text search for titles, summaries, and tags with index design, Chinese analysis, and highlights.',
-    category: 'Search',
-    tags: ['Elasticsearch', 'Search', 'Analyzer'],
-    date: '2026-05-02',
-    views: 834,
-    cover: postCover5
-  },
-  {
-    id: 12,
-    title: 'Frontend Performance Checklist',
-    summary:
-      'A checklist for bundle splitting, image compression, lazy loading, cache strategy, and first screen rendering.',
-    category: 'Frontend',
-    tags: ['Performance', 'Vite', 'Lazy Load'],
-    date: '2026-05-02',
-    views: 1260,
-    cover: postCover6
-  },
-  {
-    id: 13,
-    title: 'GitHub Actions Deployment',
-    summary:
-      'Use GitHub Actions to build frontend assets, upload artifacts, and publish to the server automatically.',
-    category: 'DevOps',
-    tags: ['GitHub Actions', 'CI/CD'],
-    date: '2026-05-01',
-    views: 705,
-    cover: postCover1
-  },
-  {
-    id: 14,
-    title: 'API Rate Limiting Strategy',
-    summary:
-      'Compare IP, user, and route based rate limits with Redis counters and token bucket scenarios.',
-    category: 'Backend',
-    tags: ['Rate Limit', 'Redis', 'Security'],
-    date: '2026-05-01',
-    views: 903,
-    cover: postCover2
-  },
-  {
-    id: 15,
-    title: 'Spring Security ??????',
-    summary:
-      '??????????????????????????????????',
-    category: '????',
-    tags: ['Spring Security', '??', '??'],
-    date: '2026-04-30',
-    views: 1018,
-    cover: postCover3
-  },
-  {
-    id: 16,
-    title: 'Vue ?????????',
-    summary:
-      '??????????????props ?????????????????',
-    category: '????',
-    tags: ['Vue 3', '????', '??'],
-    date: '2026-04-30',
-    views: 876,
-    cover: postCover4
-  },
-  {
-    id: 17,
-    title: '??????????',
-    summary:
-      '???????????????????????????????????',
-    category: '????',
-    tags: ['??', '??', '??'],
-    date: '2026-04-29',
-    views: 642,
-    cover: postCover5
+    date: post.date,
+    views: post.views,
+    cover: postCoverMap[post.coverKey] ?? defaultPostCover
   }
-]
+}
+
+async function loadPublishedPosts(page = currentPage.value) {
+  isPostLoading.value = true
+  postErrorMessage.value = ''
+
+  try {
+    const res = await getPublishedPosts({
+      current: page,
+      pageSize: postPageSize
+    })
+
+    if (res.data.code === 200) {
+      const pageData = res.data.data
+
+      posts.value = (pageData?.records ?? []).map(toPost)
+      totalPosts.value = pageData?.total ?? 0
+      totalPages.value = Math.max(1, pageData?.pages ?? 1)
+      currentPage.value = pageData?.current ?? page
+      return
+    }
+
+    postErrorMessage.value = res.data.message || '文章加载失败'
+  } catch (error) {
+    console.error('文章列表加载失败：', error)
+    postErrorMessage.value = '文章加载失败，请稍后再试'
+  } finally {
+    isPostLoading.value = false
+  }
+}
 
 const introMetas: IntroMeta[] = [
   {
@@ -256,28 +128,48 @@ const introMetas: IntroMeta[] = [
   }
 ]
 
-const profileStats: ProfileStat[] = [
-  {
-    type: 'article',
-    label: '文章',
-    value: '6'
-  },
-  {
-    type: 'category',
-    label: '分类',
-    value: '5'
-  },
-  {
-    type: 'tag',
-    label: '标签',
-    value: '12'
-  },
-  {
-    type: 'view',
-    label: '访问',
-    value: '1.2k'
+function formatStatNumber(value: number) {
+  if (value >= 10000) {
+    return `${(value / 10000).toFixed(1).replace(/\.0$/, '')}w`
   }
-]
+
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(1).replace(/\.0$/, '')}k`
+  }
+
+  return String(value)
+}
+
+const profileStats = computed<ProfileStat[]>(() => {
+  const categories = posts.value
+    .map((post) => post.category)
+    .filter((category): category is string => Boolean(category))
+  const tags = posts.value.flatMap((post) => post.tags)
+  const views = posts.value.reduce((total, post) => total + post.views, 0)
+
+  return [
+    {
+      type: 'article',
+      label: '文章',
+      value: String(totalPosts.value)
+    },
+    {
+      type: 'category',
+      label: '分类',
+      value: String(new Set(categories).size)
+    },
+    {
+      type: 'tag',
+      label: '标签',
+      value: String(new Set(tags).size)
+    },
+    {
+      type: 'view',
+      label: '访问',
+      value: formatStatNumber(views)
+    }
+  ]
+})
 
 const quoteStyle = {
   backgroundImage: `url(${quoteBg})`
@@ -285,9 +177,6 @@ const quoteStyle = {
 
 const { isLightTheme } = useBlogTheme()
 
-const firstPagePostCount = 6
-const otherPagePostCount = 9
-const currentPage = ref(1)
 const postsContainerRef = ref<HTMLElement | null>(null)
 
 const isMobilePostList = ref(false)
@@ -296,33 +185,17 @@ const showIntroCard = computed(() => {
   return !isMobilePostList.value && currentPage.value === 1
 })
 
-const firstPageCapacity = computed(() => {
-  return isMobilePostList.value ? otherPagePostCount : firstPagePostCount
-})
-
-const currentPageCapacity = computed(() => {
-  return showIntroCard.value ? firstPagePostCount : otherPagePostCount
-})
-
-const totalPages = computed(() => {
-  const remainingPosts = Math.max(0, posts.length - firstPageCapacity.value)
-
-  return 1 + Math.ceil(remainingPosts / otherPagePostCount)
-})
-
 const paginatedPosts = computed(() => {
-  if (currentPage.value === 1) {
-    return posts.slice(0, firstPageCapacity.value)
-  }
-
-  const start = firstPageCapacity.value + (currentPage.value - 2) * otherPagePostCount
-
-  return posts.slice(start, start + otherPagePostCount)
+  return posts.value
 })
 
 const postPlaceholders = computed(() => {
+  if (posts.value.length === 0) {
+    return []
+  }
+
   return Array.from(
-    { length: Math.max(0, currentPageCapacity.value - paginatedPosts.value.length) },
+    { length: Math.max(0, postPageSize - posts.value.length) },
     (_, index) => index
   )
 })
@@ -347,13 +220,13 @@ async function scrollToPostsContainer() {
   })
 }
 
-function setCurrentPage(page: number) {
+async function setCurrentPage(page: number) {
   if (page < 1 || page > totalPages.value || page === currentPage.value) {
     return
   }
 
-  currentPage.value = page
-  void scrollToPostsContainer()
+  await loadPublishedPosts(page)
+  await scrollToPostsContainer()
 }
 
 const pageStyle = computed(() => {
@@ -413,6 +286,7 @@ onMounted(() => {
   mobilePostListMediaQuery.addEventListener('change', handleMobilePostListChange)
 
   startTypingSignature()
+  void loadPublishedPosts()
 })
 
 onBeforeUnmount(() => {
@@ -548,78 +422,90 @@ onBeforeUnmount(() => {
       </section>
 
       <section ref="postsContainerRef" class="posts-container">
-        <article
-          v-for="(post, index) in paginatedPosts"
-          :key="post.id"
-          class="post-card"
-        >
-          <div class="post-cover">
-            <div class="post-cover-backdrop" aria-hidden="true">
+        <div v-if="isPostLoading" class="post-list-state">
+          文章加载中...
+        </div>
+        <div v-else-if="postErrorMessage" class="post-list-state is-error">
+          {{ postErrorMessage }}
+        </div>
+        <div v-else-if="posts.length === 0" class="post-list-state">
+          暂无文章
+        </div>
+
+        <template v-else>
+          <article
+            v-for="(post, index) in paginatedPosts"
+            :key="post.id"
+            class="post-card"
+          >
+            <div class="post-cover">
+              <div class="post-cover-backdrop" aria-hidden="true">
+                <img
+                  :src="post.cover"
+                  alt=""
+                  :loading="index < 2 ? 'eager' : 'lazy'"
+                  :fetchpriority="index === 0 ? 'high' : 'auto'"
+                  decoding="async"
+                />
+              </div>
               <img
+                class="post-cover-image"
                 :src="post.cover"
-                alt=""
+                :alt="post.title"
                 :loading="index < 2 ? 'eager' : 'lazy'"
                 :fetchpriority="index === 0 ? 'high' : 'auto'"
                 decoding="async"
               />
-            </div>
-            <img
-              class="post-cover-image"
-              :src="post.cover"
-              :alt="post.title"
-              :loading="index < 2 ? 'eager' : 'lazy'"
-              :fetchpriority="index === 0 ? 'high' : 'auto'"
-              decoding="async"
-            />
 
-            <div class="post-cover-mask">
-              <h2 class="post-cover-title">
-                {{ post.title }}
-              </h2>
-            </div>
-          </div>
-
-          <div class="post-content">
-            <p class="post-summary">
-              {{ post.summary }}
-            </p>
-
-            <div class="post-meta">
-              <span>{{ post.date }}</span>
-              <span>{{ post.views }} 阅读</span>
-            </div>
-
-            <div
-              class="post-card-action"
-              :class="{ 'is-empty': !post.category && post.tags.length === 0 }"
-            >
-              <div class="article-tags">
-                <span
-                  v-if="post.category"
-                  class="chip bg-color"
-                  :class="{ 'grey-chip': post.category === '未分类' }"
-                >
-                  {{ post.category }}
-                </span>
-
-                <span
-                  v-for="tag in post.tags"
-                  :key="tag"
-                  class="chip bg-color"
-                >
-                  {{ tag }}
-                </span>
+              <div class="post-cover-mask">
+                <h2 class="post-cover-title">
+                  {{ post.title }}
+                </h2>
               </div>
             </div>
-          </div>
-        </article>
 
-        <article
-          v-for="index in postPlaceholders"
-          :key="`placeholder-${index}`"
-          class="post-card post-card-placeholder"
-          aria-hidden="true"
-        ></article>
+            <div class="post-content">
+              <p class="post-summary">
+                {{ post.summary }}
+              </p>
+
+              <div class="post-meta">
+                <span>{{ post.date }}</span>
+                <span>{{ post.views }} 阅读</span>
+              </div>
+
+              <div
+                class="post-card-action"
+                :class="{ 'is-empty': !post.category && post.tags.length === 0 }"
+              >
+                <div class="article-tags">
+                  <span
+                    v-if="post.category"
+                    class="chip bg-color"
+                    :class="{ 'grey-chip': post.category === '未分类' }"
+                  >
+                    {{ post.category }}
+                  </span>
+
+                  <span
+                    v-for="tag in post.tags"
+                    :key="tag"
+                    class="chip bg-color"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article
+            v-for="index in postPlaceholders"
+            :key="`placeholder-${index}`"
+            class="post-card post-card-placeholder"
+            aria-hidden="true"
+          ></article>
+        </template>
       </section>
 
       <section
@@ -1160,6 +1046,29 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 28px;
+}
+
+.post-list-state {
+  grid-column: 1 / -1;
+
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--theme-muted);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+
+  background: var(--theme-card-bg);
+  border-radius: 16px;
+  box-shadow: var(--theme-card-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.post-list-state.is-error {
+  color: #ef4444;
 }
 
 .post-card {
