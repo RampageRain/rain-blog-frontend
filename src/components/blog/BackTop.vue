@@ -1,5 +1,6 @@
 ﻿<script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { Icon } from '@iconify/vue'
 
 const visible = ref(false)
 const showOffset = 320
@@ -34,12 +35,7 @@ onBeforeUnmount(() => {
       aria-label="Back to top"
       @click="scrollToTop"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          fill="currentColor"
-          d="M12 5.5 5.6 12l1.5 1.4 3.8-3.9V20h2.2V9.5l3.8 3.9 1.5-1.4L12 5.5Z"
-        />
-      </svg>
+      <Icon icon="fa-solid:arrow-up" aria-hidden="true" />
     </button>
   </Transition>
 </template>

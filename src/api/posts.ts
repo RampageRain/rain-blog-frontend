@@ -16,6 +16,10 @@ export interface PostListItem {
   views: number
 }
 
+export interface PostDetail extends PostListItem {
+  contentMd: string
+}
+
 export interface PageResult<T> {
   records: T[]
   total: number
@@ -31,4 +35,8 @@ export interface PostPageParams {
 
 export function getPublishedPosts(params: PostPageParams) {
   return request.get<ApiResult<PageResult<PostListItem>>>('/posts', { params })
+}
+
+export function getPostDetail(id: number | string) {
+  return request.get<ApiResult<PostDetail>>(`/posts/${id}`)
 }

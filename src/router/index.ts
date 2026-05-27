@@ -3,6 +3,7 @@ import HomeView from "@/views/blog/HomeView.vue";
 import LoginView from "@/views/studio/LoginView.vue";
 import DashboardView from "@/views/studio/DashboardView.vue";
 import PostListView from "@/views/blog/PostListView.vue";
+import PostDetailView from "@/views/blog/PostDetailView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,6 +24,11 @@ const router = createRouter({
       component: PostListView
     },
     {
+      path: '/posts/:id',
+      name: 'postDetail',
+      component: PostDetailView
+    },
+    {
       path: '/studio/dashboard',
       name: 'studioDashboard',
       component: DashboardView,
@@ -31,7 +37,15 @@ const router = createRouter({
       }
     },
   ],
-  scrollBehavior(){
+  scrollBehavior(to){
+    if (to.path === '/' && to.hash === '#home-posts') {
+      return {
+        el: '#home-posts',
+        top: 0,
+        behavior: 'auto'
+      }
+    }
+
     return { top: 0 }
   }
 })

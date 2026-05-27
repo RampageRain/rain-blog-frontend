@@ -5,8 +5,10 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
 import BackTop from '@/components/blog/BackTop.vue'
+import PostCard from '@/components/blog/PostCard.vue'
 import { useBlogTheme } from '@/composables/useBlogTheme'
 import { getPublishedPosts, type PostListItem } from '@/api/posts'
+import { mergeMockPostListItems, mockPostListItems } from '@/data/mockPosts'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
 import postCover2 from '@/assets/images/home-bg-2.jpg'
@@ -37,7 +39,7 @@ interface ProfileStat {
 }
 
 interface IntroMeta {
-  type: 'location' | 'writing' | 'code'
+  icon: string
   text: string
 }
 
@@ -68,6 +70,7 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 const totalPosts = ref(0)
 const posts = ref<Post[]>([])
+const isClientPaginated = ref(false)
 const isPostLoading = ref(false)
 const postErrorMessage = ref('')
 
@@ -84,6 +87,20 @@ function toPost(post: PostListItem): Post {
   }
 }
 
+function setPostList(records: PostListItem[], total?: number, pages?: number, page = currentPage.value) {
+  posts.value = records.map(toPost)
+
+  if (isClientPaginated.value) {
+    totalPosts.value = records.length
+    totalPages.value = Math.max(1, Math.ceil(records.length / postPageSize))
+  } else {
+    totalPosts.value = Math.max(total ?? records.length, records.length)
+    totalPages.value = Math.max(1, pages ?? Math.ceil(records.length / postPageSize))
+  }
+
+  currentPage.value = Math.min(Math.max(1, page), totalPages.value)
+}
+
 async function loadPublishedPosts(page = currentPage.value) {
   isPostLoading.value = true
   postErrorMessage.value = ''
@@ -96,18 +113,19 @@ async function loadPublishedPosts(page = currentPage.value) {
 
     if (res.data.code === 200) {
       const pageData = res.data.data
+      isClientPaginated.value = mockPostListItems.length > 0
+      const records = mergeMockPostListItems(pageData?.records ?? [])
 
-      posts.value = (pageData?.records ?? []).map(toPost)
-      totalPosts.value = pageData?.total ?? 0
-      totalPages.value = Math.max(1, pageData?.pages ?? 1)
-      currentPage.value = pageData?.current ?? page
+      setPostList(records, pageData?.total, pageData?.pages, pageData?.current ?? page)
       return
     }
 
     postErrorMessage.value = res.data.message || '文章加载失败'
   } catch (error) {
     console.error('文章列表加载失败：', error)
-    postErrorMessage.value = '文章加载失败，请稍后再试'
+    isClientPaginated.value = true
+    setPostList(mockPostListItems, mockPostListItems.length, 1, 1)
+    postErrorMessage.value = ''
   } finally {
     isPostLoading.value = false
   }
@@ -115,18 +133,25 @@ async function loadPublishedPosts(page = currentPage.value) {
 
 const introMetas: IntroMeta[] = [
   {
-    type: 'location',
+    icon: 'fa-solid:map-marker-alt',
     text: '中国'
   },
   {
-    type: 'writing',
+    icon: 'fa-solid:book',
     text: '持续创作中'
   },
   {
-    type: 'code',
+    icon: 'fa-solid:code',
     text: '代码即生活'
   }
 ]
+
+const profileStatIcons: Record<ProfileStat['type'], string> = {
+  article: 'fa-regular:file-alt',
+  category: 'fa-solid:layer-group',
+  tag: 'fa-solid:tags',
+  view: 'fa-regular:eye'
+}
 
 function formatStatNumber(value: number) {
   if (value >= 10000) {
@@ -186,16 +211,21 @@ const showIntroCard = computed(() => {
 })
 
 const paginatedPosts = computed(() => {
-  return posts.value
+  if (!isClientPaginated.value) {
+    return posts.value
+  }
+
+  const start = (currentPage.value - 1) * postPageSize
+  return posts.value.slice(start, start + postPageSize)
 })
 
 const postPlaceholders = computed(() => {
-  if (posts.value.length === 0) {
+  if (paginatedPosts.value.length === 0) {
     return []
   }
 
   return Array.from(
-    { length: Math.max(0, postPageSize - posts.value.length) },
+    { length: Math.max(0, postPageSize - paginatedPosts.value.length) },
     (_, index) => index
   )
 })
@@ -222,6 +252,12 @@ async function scrollToPostsContainer() {
 
 async function setCurrentPage(page: number) {
   if (page < 1 || page > totalPages.value || page === currentPage.value) {
+    return
+  }
+
+  if (isClientPaginated.value) {
+    currentPage.value = page
+    await scrollToPostsContainer()
     return
   }
 
@@ -338,34 +374,7 @@ onBeforeUnmount(() => {
             :key="meta.text"
             class="intro-meta-item"
           >
-            <svg
-              v-if="meta.type === 'location'"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11z"/>
-              <circle cx="12" cy="10" r="2.2"/>
-            </svg>
-
-            <svg
-              v-else-if="meta.type === 'writing'"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M5 5.5h11.5a2.5 2.5 0 0 1 0 5H5z"/>
-              <path d="M5 10.5h10.5a2.5 2.5 0 0 1 0 5H5z"/>
-              <path d="M5 15.5h9a2.5 2.5 0 0 1 0 5H5z"/>
-            </svg>
-
-            <svg
-              v-else
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="m9 7-5 5 5 5"/>
-              <path d="m15 7 5 5-5 5"/>
-              <path d="m13 5-2 14"/>
-            </svg>
+            <Icon :icon="meta.icon" aria-hidden="true" />
 
             <span>{{ meta.text }}</span>
           </span>
@@ -379,26 +388,7 @@ onBeforeUnmount(() => {
                 class="profile-stat"
               >
           <span class="stat-icon">
-            <Icon
-              v-if="stat.type === 'article'"
-              icon="solar:document-text-linear"
-              aria-hidden="true"
-            />
-            <Icon
-              v-else-if="stat.type === 'category'"
-              icon="solar:layers-linear"
-              aria-hidden="true"
-            />
-            <Icon
-              v-else-if="stat.type === 'tag'"
-              icon="solar:tag-linear"
-              aria-hidden="true"
-            />
-            <Icon
-              v-else
-              icon="solar:eye-linear"
-              aria-hidden="true"
-            />
+            <Icon :icon="profileStatIcons[stat.type]" aria-hidden="true" />
           </span>
 
                 <div class="stat-content">
@@ -433,72 +423,12 @@ onBeforeUnmount(() => {
         </div>
 
         <template v-else>
-          <article
+          <PostCard
             v-for="(post, index) in paginatedPosts"
             :key="post.id"
-            class="post-card"
-          >
-            <div class="post-cover">
-              <div class="post-cover-backdrop" aria-hidden="true">
-                <img
-                  :src="post.cover"
-                  alt=""
-                  :loading="index < 2 ? 'eager' : 'lazy'"
-                  :fetchpriority="index === 0 ? 'high' : 'auto'"
-                  decoding="async"
-                />
-              </div>
-              <img
-                class="post-cover-image"
-                :src="post.cover"
-                :alt="post.title"
-                :loading="index < 2 ? 'eager' : 'lazy'"
-                :fetchpriority="index === 0 ? 'high' : 'auto'"
-                decoding="async"
-              />
-
-              <div class="post-cover-mask">
-                <h2 class="post-cover-title">
-                  {{ post.title }}
-                </h2>
-              </div>
-            </div>
-
-            <div class="post-content">
-              <p class="post-summary">
-                {{ post.summary }}
-              </p>
-
-              <div class="post-meta">
-                <span>{{ post.date }}</span>
-                <span>{{ post.views }} 阅读</span>
-              </div>
-
-              <div
-                class="post-card-action"
-                :class="{ 'is-empty': !post.category && post.tags.length === 0 }"
-              >
-                <div class="article-tags">
-                  <span
-                    v-if="post.category"
-                    class="chip bg-color"
-                    :class="{ 'grey-chip': post.category === '未分类' }"
-                  >
-                    {{ post.category }}
-                  </span>
-
-                  <span
-                    v-for="tag in post.tags"
-                    :key="tag"
-                    class="chip bg-color"
-                  >
-                    {{ tag }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </article>
-
+            :post="post"
+            :index="index"
+          />
           <article
             v-for="index in postPlaceholders"
             :key="`placeholder-${index}`"
@@ -509,48 +439,52 @@ onBeforeUnmount(() => {
       </section>
 
       <section
-        v-if="totalPages > 1"
-        class="pagination-section"
+        v-if="totalPages > 1 || (isMobilePostList && !isPostLoading && !postErrorMessage && posts.length > 0)"
+        class="pagination-section paging"
         aria-label="Post pagination"
       >
-        <div class="pagination-control pagination-control-prev">
-          <button
-            type="button"
-            class="pagination-button pagination-prev"
-            :disabled="currentPage === 1"
-            aria-label="Previous page"
-            @click="setCurrentPage(currentPage - 1)"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M15.4 6.2 10.8 12l4.6 5.8L13.8 19 8 12l5.8-7 1.6 1.2Z"
+        <div class="pagination-row row">
+          <div class="pagination-control pagination-control-prev col s6 m4 l4">
+            <button
+              type="button"
+              class="pagination-button pagination-prev left btn-floating btn-large waves-effect waves-light bg-color"
+              :class="{ disabled: currentPage === 1 }"
+              :disabled="currentPage === 1"
+              aria-label="Previous page"
+              @click="setCurrentPage(currentPage - 1)"
+            >
+              <Icon
+                icon="fa-solid:angle-left"
+                class="fas fa-angle-left pagination-fa-icon"
+                aria-hidden="true"
               />
-            </svg>
-          </button>
-        </div>
+            </button>
+          </div>
 
-        <div class="pagination-info">
-          <span>{{ currentPage }}</span>
-          <em>/</em>
-          <span>{{ totalPages }}</span>
-        </div>
+          <div class="pagination-info page-info col m4 l4">
+            <div class="center-align b-text-gray">
+              <span>{{ currentPage }}</span>
+              <em>/</em>
+              <span>{{ totalPages }}</span>
+            </div>
+          </div>
 
-        <div class="pagination-control pagination-control-next">
-          <button
-            type="button"
-            class="pagination-button pagination-next"
-            :disabled="currentPage === totalPages"
-            aria-label="Next page"
-            @click="setCurrentPage(currentPage + 1)"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M8.6 17.8 13.2 12 8.6 6.2 10.2 5 16 12l-5.8 7-1.6-1.2Z"
+          <div class="pagination-control pagination-control-next col s6 m4 l4">
+            <button
+              type="button"
+              class="pagination-button pagination-next right btn-floating btn-large waves-effect waves-light bg-color"
+              :class="{ disabled: currentPage === totalPages }"
+              :disabled="currentPage === totalPages"
+              aria-label="Next page"
+              @click="setCurrentPage(currentPage + 1)"
+            >
+              <Icon
+                icon="fa-solid:angle-right"
+                class="fas fa-angle-right pagination-fa-icon"
+                aria-hidden="true"
               />
-            </svg>
-          </button>
+            </button>
+          </div>
         </div>
       </section>
     </section>
@@ -599,18 +533,22 @@ onBeforeUnmount(() => {
     0 8px 18px rgba(0, 0, 0, 0.09);
   --theme-cover-tint: rgba(15, 23, 42, 0.2);
   --theme-divider: rgb(139 139 139 / 0.2);
-  --theme-chip-bg: linear-gradient(to right, #60d0df 0%, #0101fe 100%);
-  --theme-muted-chip-bg: linear-gradient(to right, #60d0df 0%, #5454b6 100%);
-  --theme-pagination-button-bg: linear-gradient(135deg, #60d0df 0%, #0101fe 100%);
+  --theme-chip-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+  --theme-muted-chip-bg: linear-gradient(to right, #0000FF 0%, #4169E1 100%);
+  --theme-pagination-button-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
   --theme-pagination-button-shadow: 0 14px 28px rgba(1, 1, 254, 0.22);
   --theme-pagination-disabled-bg: rgba(203, 213, 225, 0.82);
   --theme-pagination-disabled-color: rgba(100, 116, 139, 0.72);
-  --theme-pagination-info-text: #475569;
+  --theme-pagination-info-text: #0f172a;
   --post-card-min-height: 360px;
 
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   padding-top: 96px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   color: var(--theme-text);
   background-position: center;
   background-size: cover;
@@ -658,9 +596,9 @@ onBeforeUnmount(() => {
     inset 0 0 0 1px rgba(147, 197, 253, 0.18);
   --theme-cover-tint: rgba(2, 6, 23, 0.32);
   --theme-divider: rgba(226, 232, 240, 0.16);
-  --theme-chip-bg: linear-gradient(to right, #38bdf8 0%, #2563eb 100%);
-  --theme-muted-chip-bg: linear-gradient(to right, #38bdf8 0%, #475569 100%);
-  --theme-pagination-button-bg: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  --theme-chip-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+  --theme-muted-chip-bg: linear-gradient(to right, #0000FF 0%, #4169E1 100%);
+  --theme-pagination-button-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
   --theme-pagination-button-shadow: 0 14px 30px rgba(14, 165, 233, 0.2);
   --theme-pagination-disabled-bg: rgba(15, 23, 42, 0.54);
   --theme-pagination-disabled-color: rgba(203, 213, 225, 0.42);
@@ -668,21 +606,110 @@ onBeforeUnmount(() => {
 }
 
 .posts-page.is-embedded {
-  min-height: auto;
-  padding-top: 36px;
-}
-
-.posts-page.is-embedded .posts-content {
-  padding-bottom: 96px;
+  padding-top: 64px;
 }
 
 .posts-content {
   position: relative;
   z-index: 1;
 
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
   width: min(1180px, calc(100% - 48px));
   margin: 0 auto;
   padding-bottom: 15px;
+}
+
+.posts-page.is-embedded .posts-content {
+  padding-bottom: 0;
+}
+
+.posts-page .pagination-section {
+  margin-top: auto;
+  margin-bottom: 15px;
+  padding-top: 24px;
+  width: 100%;
+}
+
+.paging .pagination-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.pagination-control-prev {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.pagination-control-next {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pagination-button {
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 25px;
+  line-height: 56px;
+  background: var(--theme-pagination-button-bg);
+  box-shadow: var(--theme-pagination-button-shadow);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.pagination-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: var(--theme-pagination-button-shadow), 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.pagination-button:disabled {
+  color: var(--theme-pagination-disabled-color);
+  background: var(--theme-pagination-disabled-bg);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  padding-top: 1rem;
+  color: var(--theme-pagination-info-text);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.pagination-info .center-align {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.pagination-button .pagination-fa-icon {
+  color: currentColor;
+  width: 40px;
+  height: 40px;
+}
+
+.pagination-info em {
+  font-style: normal;
+  opacity: 0.62;
 }
 
 .intro-card {
@@ -812,89 +839,7 @@ onBeforeUnmount(() => {
 .intro-meta-item svg {
   width: 16px;
   height: 16px;
-
-  fill: none;
-  stroke: var(--theme-meta-stroke);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.profile-stats {
-  width: 100%;
-  margin-top: 30px;
-
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-.profile-stat {
-  min-height: 82px;
-  padding: 16px 14px;
-  border-radius: 16px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-
-  background: var(--theme-stat-bg);
-  box-shadow: var(--theme-stat-shadow);
-
-  transition:
-    background 0.28s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.profile-stat:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--theme-stat-hover-shadow);
-}
-
-.stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  color: var(--theme-stat-icon-color);
-
-  background: var(--theme-stat-icon-bg);
-  box-shadow: var(--theme-stat-icon-shadow);
-}
-
-.stat-icon svg {
-  width: 21px;
-  height: 21px;
-
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.stat-content strong {
-  color: var(--theme-text);
-  font-size: 23px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.stat-content span {
-  color: var(--theme-muted);
-  font-size: 14px;
+  color: var(--theme-meta-stroke);
 }
 
 .intro-image-panel {
@@ -1071,311 +1016,6 @@ onBeforeUnmount(() => {
   color: #ef4444;
 }
 
-.post-card {
-  overflow: hidden;
-  border-radius: 8px;
-
-  min-height: var(--post-card-min-height);
-
-  display: flex;
-  flex-direction: column;
-
-  background: var(--theme-card-bg);
-  box-shadow: var(--theme-card-shadow);
-  backdrop-filter: blur(10px);
-
-  transition:
-    background 0.28s ease,
-    transform 0.22s ease,
-    box-shadow 0.22s ease;
-}
-
-.post-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--theme-card-hover-shadow);
-}
-
-.post-card-placeholder {
-  min-height: var(--post-card-min-height);
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.pagination-section {
-  width: 100%;
-  margin: 18px auto -80px;
-
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: center;
-  gap: 28px;
-}
-
-.pagination-control {
-  display: flex;
-  align-items: center;
-}
-
-.pagination-control-prev {
-  justify-content: flex-start;
-}
-
-.pagination-control-next {
-  justify-content: flex-end;
-}
-
-.pagination-button {
-  width: 56px;
-  height: 56px;
-  border: none;
-  border-radius: 50%;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  color: #ffffff;
-  background: var(--theme-pagination-button-bg);
-  box-shadow: var(--theme-pagination-button-shadow);
-  cursor: pointer;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.pagination-button:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: var(--theme-pagination-button-shadow),
-    0 10px 22px rgba(15, 23, 42, 0.12);
-}
-
-.pagination-button:disabled {
-  color: var(--theme-pagination-disabled-color);
-  background: var(--theme-pagination-disabled-bg);
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-.pagination-button svg {
-  width: 28px;
-  height: 28px;
-}
-
-.pagination-info {
-  justify-self: center;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-
-  color: var(--theme-pagination-info-text);
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
-}
-
-.pagination-info em {
-  color: var(--theme-subtle);
-  font-style: normal;
-  font-weight: 600;
-}
-
-.post-cover {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 8px 8px 0 0;
-}
-
-.post-cover-backdrop {
-  position: absolute;
-  inset: 0;
-
-  transform: scale(1.08);
-  filter: blur(16px);
-}
-
-.post-cover-backdrop img {
-  width: 100%;
-  height: 100%;
-  display: block;
-
-  object-fit: cover;
-  object-position: center;
-}
-
-.post-cover-backdrop::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--theme-cover-tint);
-}
-
-.post-cover-image {
-  position: relative;
-  z-index: 1;
-
-  width: 100%;
-  height: 100%;
-  display: block;
-
-  object-fit: contain;
-  object-position: center;
-  transform: scale(1.025);
-
-  transition: transform 0.3s ease;
-}
-
-.post-card:hover .post-cover-image {
-  transform: scale(1.06);
-}
-
-.post-cover-mask {
-  position: absolute;
-  inset: auto 0 0;
-  z-index: 2;
-
-  padding: 46px 18px 18px;
-
-  background: linear-gradient(
-    180deg,
-    rgba(15, 23, 42, 0),
-    rgba(15, 23, 42, 0.62) 42%,
-    rgba(15, 23, 42, 0.86)
-  );
-}
-
-.post-cover-title {
-  margin: 0;
-
-  color: #ffffff;
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.35;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.post-content {
-  min-height: 0;
-  padding: 15px 15px 14px 18px;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.post-summary {
-  min-height: 50px;
-  margin: 0;
-
-  color: var(--theme-muted);
-  line-height: 1.8;
-  font-size: 14px;
-  word-break: break-all;
-
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.post-meta {
-  margin-top: 12px;
-
-  display: flex;
-  justify-content: space-between;
-
-  color: var(--theme-subtle);
-  font-size: 13px;
-}
-
-.post-card-action {
-  position: relative;
-
-  min-height: 0;
-  margin-top: 6px;
-  padding: 4px 0 0;
-
-  display: flex;
-  align-items: center;
-
-  border-radius: 0 0 8px 8px !important;
-  box-sizing: border-box;
-}
-
-/* 用伪元素画完整分割线，不受 padding 影响 */
-.post-card-action::before {
-  content: '';
-
-  position: absolute;
-  top: 0;
-  left: -18px;
-  right: -15px;
-
-  height: 1px;
-  background: var(--theme-divider);
-}
-
-.post-card-action.is-empty {
-  visibility: hidden;
-}
-
-.article-tags {
-  width: 100%;
-  min-height: 0;
-  margin-top: 10px;
-
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-
-  padding: 0;
-}
-
-.article-tags .chip {
-  margin: 0;
-  padding: 0 10px !important;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-height: 22px;
-  height: 22px;
-  line-height: 1 !important;
-  border-radius: 10px;
-
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-
-.bg-color {
-  background-image: var(--theme-chip-bg);
-}
-
-/* 未分类弱化，但仍保持 chip 形态 */
-.grey-chip {
-
-  background-image: var(--theme-muted-chip-bg) !important;
-}
-
 @media (max-width: 980px) {
   .intro-layout {
     grid-template-columns: 1fr;
@@ -1402,12 +1042,11 @@ onBeforeUnmount(() => {
   }
 
   .posts-page.is-embedded {
-    padding-top: 24px;
+    padding-top: 60px;
   }
 
   .posts-content {
     width: min(100% - 32px, 1180px);
-    padding-bottom: 15px;
   }
 
   .intro-info-panel {
@@ -1446,16 +1085,26 @@ onBeforeUnmount(() => {
   .pagination-section {
     width: 100%;
     margin-top: 28px;
+  }
+
+  .paging .pagination-row {
     grid-template-columns: 1fr auto 1fr;
   }
 
-  .pagination-button {
-    width: 52px;
-    height: 52px;
+  .pagination-info {
+    display: inline-flex;
+    padding-top: 0;
   }
 
-  .post-content {
-    min-height: 0;
+  .pagination-button {
+    width: 48px;
+    height: 48px;
   }
+
+  .pagination-button .pagination-fa-icon {
+    width: 34px;
+    height: 34px;
+  }
+
 }
 </style>

@@ -36,7 +36,7 @@ async function handleLogin() {
       username: username.value.trim(),
       password: password.value.trim()
     })
-    console.log('后端响应：', res.data)
+
     if (res.data.code !== 200) {
       errorMessage.value = res.data.message || '用户名或密码错误'
       return
@@ -48,8 +48,7 @@ async function handleLogin() {
       avatar: loginData.avatar
     })
     await router.push('/studio/dashboard')
-  } catch (error) {
-    console.log('登录失败', error)
+  } catch {
     errorMessage.value = '服务器连接失败，请稍后重试！'
   } finally {
     loading.value = false

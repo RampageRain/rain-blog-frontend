@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { Icon } from '@iconify/vue'
 
 import { useAuthStore } from '@/stores/auth'
 
@@ -12,24 +13,84 @@ const authStore = useAuthStore()
 const route = useRoute()
 
 const mobileMenuOpen = ref(false)
+type ImageFitMode = 'fill-width' | 'fill-height'
+
+const mobileProfileCoverFitMode = ref<ImageFitMode>('fill-width')
+const mobileProfileCrop = {
+  x: '50%',
+  y: '50%',
+  scale: 1
+}
 
 const publicMenus = [
-  { label: '首页', path: '/', icon: 'home' },
-  { label: '标签', path: '/tags', icon: 'tag' },
-  { label: '分类', path: '/categories', icon: 'category' },
-  { label: '归档', path: '/archives', icon: 'archive' },
-  { label: '关于', path: '/about', icon: 'about' }
+  { label: '首页', path: '/', icon: 'fa-solid:home' },
+  { label: '标签', path: '/tags', icon: 'fa-solid:tags' },
+  { label: '分类', path: '/categories', icon: 'fa-solid:bookmark' },
+  { label: '归档', path: '/archives', icon: 'fa-solid:archive' },
+  { label: '关于', path: '/about', icon: 'fa-solid:user-circle' }
 ]
 
-const mobileProfileStyle = {
-  backgroundImage: `
-    linear-gradient(
-      135deg,
-      rgba(15, 23, 42, 0.28),
-      rgba(15, 23, 42, 0.48)
-    ),
-    url(${mobileDrawerBg})
-  `
+function resolveImageFitMode(imageRatio: number, containerRatio: number): ImageFitMode {
+  return imageRatio >= containerRatio ? 'fill-height' : 'fill-width'
+}
+
+function getElementRatio(selector: string, fallbackRatio: number) {
+  if (typeof document === 'undefined') {
+    return fallbackRatio
+  }
+
+  const element = document.querySelector<HTMLElement>(selector)
+  if (!element) {
+    return fallbackRatio
+  }
+
+  const { width, height } = element.getBoundingClientRect()
+  if (!width || !height) {
+    return fallbackRatio
+  }
+
+  return width / height
+}
+
+function loadImageRatio(imageUrl: string) {
+  return new Promise<number>((resolve) => {
+    const image = new Image()
+    image.onload = () => {
+      resolve(image.naturalWidth && image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1)
+    }
+    image.onerror = () => resolve(1)
+    image.src = imageUrl
+  })
+}
+
+async function refreshMobileProfileCoverFit() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  await nextTick()
+
+  const profileRatio = getElementRatio('.mobile-profile', 1.6)
+  const imageRatio = await loadImageRatio(mobileDrawerBg)
+  mobileProfileCoverFitMode.value = resolveImageFitMode(imageRatio, profileRatio)
+}
+
+const mobileProfileCoverClass = computed(() => {
+  return mobileProfileCoverFitMode.value === 'fill-height' ? 'is-fill-height' : 'is-fill-width'
+})
+
+const mobileProfileCoverStyle = computed(() => {
+  return {
+    top: mobileProfileCrop.y,
+    left: mobileProfileCrop.x,
+    transform: `translate(-50%, -50%) scale(${mobileProfileCrop.scale})`
+  }
+})
+
+function handleWindowResize() {
+  if (mobileMenuOpen.value) {
+    void refreshMobileProfileCoverFit()
+  }
 }
 
 const emit = defineEmits<{
@@ -59,26 +120,24 @@ function handleSearchClick() {
 
 watch(mobileMenuOpen, (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
+
+  if (open) {
+    void refreshMobileProfileCoverFit()
+  }
+})
+
+onMounted(() => {
+  window.addEventListener('resize', handleWindowResize)
 })
 
 onUnmounted(() => {
   document.body.style.overflow = ''
+  window.removeEventListener('resize', handleWindowResize)
 })
 </script>
 
 <template>
   <header class="blog-navbar">
-    <button
-      type="button"
-      class="mobile-menu-button"
-      aria-label="打开菜单"
-      @click="openMobileMenu"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M4 6.5h16v2H4v-2Zm0 4.5h16v2H4v-2Zm0 4.5h16v2H4v-2Z" />
-      </svg>
-    </button>
-
     <RouterLink class="brand" to="/" @click="handleBrandClick">
       <img
         class="brand-logo"
@@ -98,48 +157,12 @@ onUnmounted(() => {
         active-class=""
         exact-active-class=""
       >
-        <svg v-if="item.icon === 'home'" class="nav-icon" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-        </svg>
-
-        <svg v-else-if="item.icon === 'tag'" class="nav-icon" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M20.59 13.41 11.17 4H4v7.17l9.41 9.42a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83ZM6.5 8A1.5 1.5 0 1 1 8 6.5 1.5 1.5 0 0 1 6.5 8Z"
-          />
-        </svg>
-
-        <svg v-else-if="item.icon === 'category'" class="nav-icon" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M4 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v2H4V5Zm0 6h16v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6Z"
-          />
-        </svg>
-
-        <svg v-else-if="item.icon === 'archive'" class="nav-icon" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M20.54 5.23 19.15 3.55A1.5 1.5 0 0 0 18 3H6a1.5 1.5 0 0 0-1.15.55L3.46 5.23A2 2 0 0 0 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5a2 2 0 0 0-.46-1.27ZM5.12 5h13.76l.82 1H4.3l.82-1ZM5 8h14v11H5V8Zm4 3h6v2H9v-2Z"
-          />
-        </svg>
-
-        <svg v-else-if="item.icon === 'about'" class="nav-icon" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"
-          />
-        </svg>
-
+        <Icon class="nav-icon" :icon="item.icon" aria-hidden="true" />
         <span>{{ item.label }}</span>
       </RouterLink>
 
       <button type="button" class="nav-item" @click="handleSearchClick">
-        <svg class="nav-icon" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M9.5 3A6.5 6.5 0 0 1 14.65 13.45l4.95 4.95-1.4 1.4-4.95-4.95A6.5 6.5 0 1 1 9.5 3Zm0 2A4.5 4.5 0 1 0 14 9.5 4.5 4.5 0 0 0 9.5 5Z"
-          />
-        </svg>
+        <Icon class="nav-icon" icon="fa-solid:search" aria-hidden="true" />
         <span>搜索</span>
       </button>
 
@@ -151,12 +174,7 @@ onUnmounted(() => {
         active-class=""
         exact-active-class=""
       >
-        <svg class="nav-icon" viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M4 4h10v2H6v12h12v-8h2v10H4V4Zm14.7-.3 1.6 1.6a1 1 0 0 1 0 1.4l-8.9 8.9L8 16l.4-3.4 8.9-8.9a1 1 0 0 1 1.4 0ZM10.2 13.8l.9-.1 7.1-7.1-.8-.8-7.1 7.1-.1.9Z"
-          />
-        </svg>
+        <Icon class="nav-icon" icon="fa-solid:edit" aria-hidden="true" />
         <span>后台</span>
       </RouterLink>
     </nav>
@@ -167,12 +185,7 @@ onUnmounted(() => {
       aria-label="搜索"
       @click="handleSearchClick"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          fill="currentColor"
-          d="M9.5 3A6.5 6.5 0 0 1 14.65 13.45l4.95 4.95-1.4 1.4-4.95-4.95A6.5 6.5 0 1 1 9.5 3Zm0 2A4.5 4.5 0 1 0 14 9.5 4.5 4.5 0 0 0 9.5 5Z"
-        />
-      </svg>
+      <Icon icon="fa-solid:search" aria-hidden="true" />
     </button>
 
     <button
@@ -181,9 +194,7 @@ onUnmounted(() => {
       aria-label="打开菜单"
       @click="openMobileMenu"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M4 6.5h16v2H4v-2Zm0 4.5h16v2H4v-2Zm0 4.5h16v2H4v-2Z" />
-      </svg>
+      <Icon icon="fa-solid:bars" aria-hidden="true" />
     </button>
 
     <Teleport to="body">
@@ -194,7 +205,15 @@ onUnmounted(() => {
           @click="closeMobileMenu"
         >
           <aside class="mobile-drawer" @click.stop>
-            <div class="mobile-profile" :style="mobileProfileStyle">
+            <div class="mobile-profile">
+              <img
+                class="mobile-profile-cover"
+                :class="mobileProfileCoverClass"
+                :style="mobileProfileCoverStyle"
+                :src="mobileDrawerBg"
+                alt=""
+                aria-hidden="true"
+              />
               <img class="mobile-avatar" :src="avatar" alt="Rain Blog" />
 
               <h2>Rain Blog</h2>
@@ -213,38 +232,7 @@ onUnmounted(() => {
                 :class="{ 'mobile-active': isCurrentPath(item.path) }"
                 @click="closeMobileMenu"
               >
-                <svg v-if="item.icon === 'home'" class="mobile-menu-icon" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-                </svg>
-
-                <svg v-else-if="item.icon === 'tag'" class="mobile-menu-icon" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M20.59 13.41 11.17 4H4v7.17l9.41 9.42a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83ZM6.5 8A1.5 1.5 0 1 1 8 6.5 1.5 1.5 0 0 1 6.5 8Z"
-                  />
-                </svg>
-
-                <svg v-else-if="item.icon === 'category'" class="mobile-menu-icon" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M4 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v2H4V5Zm0 6h16v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6Z"
-                  />
-                </svg>
-
-                <svg v-else-if="item.icon === 'archive'" class="mobile-menu-icon" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M20.54 5.23 19.15 3.55A1.5 1.5 0 0 0 18 3H6a1.5 1.5 0 0 0-1.15.55L3.46 5.23A2 2 0 0 0 3 6.5V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.5a2 2 0 0 0-.46-1.27ZM5.12 5h13.76l.82 1H4.3l.82-1ZM5 8h14v11H5V8Zm4 3h6v2H9v-2Z"
-                  />
-                </svg>
-
-                <svg v-else-if="item.icon === 'about'" class="mobile-menu-icon" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"
-                  />
-                </svg>
-
+                <Icon class="mobile-menu-icon" :icon="item.icon" aria-hidden="true" />
                 <span>{{ item.label }}</span>
               </RouterLink>
 
@@ -255,12 +243,7 @@ onUnmounted(() => {
                 :class="{ 'mobile-active': isCurrentPath('/studio/dashboard') }"
                 @click="closeMobileMenu"
               >
-                <svg class="mobile-menu-icon" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M4 4h10v2H6v12h12v-8h2v10H4V4Zm14.7-.3 1.6 1.6a1 1 0 0 1 0 1.4l-8.9 8.9L8 16l.4-3.4 8.9-8.9a1 1 0 0 1 1.4 0ZM10.2 13.8l.9-.1 7.1-7.1-.8-.8-7.1 7.1-.1.9Z"
-                  />
-                </svg>
+                <Icon class="mobile-menu-icon" icon="fa-solid:edit" aria-hidden="true" />
                 <span>后台</span>
               </RouterLink>
             </nav>
@@ -416,13 +399,50 @@ onUnmounted(() => {
   padding: 30px 18px 24px;
   text-align: center;
 
-  background-size: 100% 100%, cover;
-  background-position: center, center;
-  background-repeat: no-repeat, no-repeat;
+  background-color: #0f172a;
 
   overflow: hidden;
 
   border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+}
+.mobile-profile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.28), rgba(15, 23, 42, 0.48));
+}
+
+.mobile-profile-cover {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  display: block;
+  object-fit: initial;
+  object-position: center;
+  transform: translate(-50%, -50%);
+}
+
+.mobile-profile-cover.is-fill-height {
+  width: auto;
+  height: 100%;
+}
+
+.mobile-profile-cover.is-fill-width {
+  width: 100%;
+  height: auto;
+}
+
+.mobile-avatar,
+.mobile-profile h2,
+.mobile-profile p {
+  position: relative;
+  z-index: 2;
 }
 
 .mobile-menu-list {
@@ -570,7 +590,7 @@ onUnmounted(() => {
     position: absolute;
     top: 0;
 
-    width: 56px;
+    width: 50px;
     height: 60px;
     border: none;
 
@@ -593,8 +613,8 @@ onUnmounted(() => {
 
   .mobile-menu-button svg,
   .mobile-search-button svg {
-    width: 24px;
-    height: 24px;
+    width: 19px;
+    height: 19px;
   }
 }
 </style>

@@ -220,7 +220,7 @@ watch(
   font-weight: 600;
   letter-spacing: 0.2px;
 
-  background-image: linear-gradient(to right, #60d0df 0%, #0101fe 100%);
+  background-image: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
   box-shadow: 0 10px 24px rgba(1, 1, 254, 0.18);
 }
 

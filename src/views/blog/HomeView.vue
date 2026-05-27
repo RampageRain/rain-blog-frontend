@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
@@ -40,6 +40,7 @@ const mobileBackgroundImages = [
 const desktopBackgroundStorageKey = 'rain_blog_home_bg_index'
 const mobileBackgroundStorageKey = 'rain_blog_home_mobile_bg_index'
 const heroMobileMedia = '(max-width: 800px)'
+const route = useRoute()
 
 function readIsMobileHero() {
   if (typeof window === 'undefined') {
@@ -133,10 +134,21 @@ function syncHeroBackgroundForViewport(matches: boolean) {
   persistCurrentBackgroundIndex()
 }
 
-function scrollToPosts() {
-  document.getElementById('home-posts')?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start'
+async function scrollToPosts(behavior: ScrollBehavior | Event = 'smooth') {
+  await nextTick()
+
+  const postsElement = document.getElementById('home-posts')
+
+  if (!postsElement) {
+    return
+  }
+
+  const scrollBehavior = typeof behavior === 'string' ? behavior : 'smooth'
+  const targetTop = postsElement.getBoundingClientRect().top + window.scrollY
+
+  window.scrollTo({
+    top: targetTop,
+    behavior: scrollBehavior
   })
 }
 
@@ -206,7 +218,20 @@ onMounted(() => {
   heroMediaQuery.addEventListener('change', handleHeroMediaChange)
 
   startTypingSubtitle()
+
+  if (route.hash === '#home-posts') {
+    void scrollToPosts('auto')
+  }
 })
+
+watch(
+  () => route.hash,
+  (hash) => {
+    if (hash === '#home-posts') {
+      void scrollToPosts()
+    }
+  }
+)
 
 onBeforeUnmount(() => {
   clearTypingTimers()
@@ -260,22 +285,12 @@ function closeContactPopup() {
 
         <div class="hero-actions">
           <button type="button" class="hero-button primary" @click="scrollToPosts">
-            <svg class="hero-button-icon down-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M7.4 6.2 12 10.8l4.6-4.6L18 7.6l-6 6-6-6 1.4-1.4Zm0 5L12 15.8l4.6-4.6L18 12.6l-6 6-6-6 1.4-1.4Z"
-              />
-            </svg>
+            <Icon class="hero-button-icon down-icon" icon="fa-solid:angle-double-down" aria-hidden="true" />
             <span>开始阅读</span>
           </button>
 
           <RouterLink to="/repositories" class="hero-button ghost">
-            <svg class="hero-button-icon fork-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M7 3a3 3 0 0 1 1 5.83V10c0 1.1.9 2 2 2h4a4 4 0 0 0 4-4V6.83A3 3 0 1 1 20 6v2a6 6 0 0 1-6 6h-4c-.73 0-1.41-.2-2-.54v1.71a3 3 0 1 1-2 0V8.83A3 3 0 0 1 7 3Zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm10-1a1 1 0 1 0 2 0 1 1 0 0 0-2 0ZM7 17a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"
-              />
-            </svg>
+            <Icon class="hero-button-icon fork-icon" icon="fa-solid:code-branch" aria-hidden="true" />
             <span>获取源码</span>
           </RouterLink>
         </div>
@@ -289,7 +304,7 @@ function closeContactPopup() {
             data-tooltip="访问我的 GitHub"
             aria-label="访问我的 GitHub"
           >
-            <Icon class="social-icon" icon="simple-icons:github" />
+            <Icon class="social-icon" icon="fa-brands:github" />
           </a>
 
           <a
@@ -298,7 +313,7 @@ function closeContactPopup() {
             data-tooltip="给我发送邮件"
             aria-label="给我发送邮件"
           >
-            <Icon class="social-icon" icon="mdi:email-outline" />
+            <Icon class="social-icon" icon="fa-solid:envelope-open" />
           </a>
 
           <button
@@ -308,7 +323,7 @@ function closeContactPopup() {
             aria-label="查看微信联系方式"
             @click="openWechatPopup"
           >
-            <Icon class="social-icon" icon="simple-icons:wechat" />
+            <Icon class="social-icon" icon="fa-brands:weixin" />
           </button>
 
           <button
@@ -318,7 +333,7 @@ function closeContactPopup() {
             aria-label="查看 QQ 联系方式"
             @click="openQQPopup"
           >
-            <Icon class="social-icon qq-icon" icon="simple-icons:tencentqq" />
+            <Icon class="social-icon qq-icon" icon="fa-brands:qq" />
           </button>
 
           <a
@@ -329,18 +344,13 @@ function closeContactPopup() {
             data-tooltip="订阅 RSS"
             aria-label="订阅 RSS"
           >
-            <Icon class="social-icon" icon="mdi:rss" />
+            <Icon class="social-icon" icon="fa-solid:rss" />
           </a>
         </div>
       </div>
 
       <button type="button" class="hero-scroll-down" aria-label="查看最新文章" @click="scrollToPosts">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M7.4 6.2 12 10.8l4.6-4.6L18 7.6l-6 6-6-6 1.4-1.4Zm0 5L12 15.8l4.6-4.6L18 12.6l-6 6-6-6 1.4-1.4Z"
-          />
-        </svg>
+        <Icon icon="fa-solid:angle-double-down" aria-hidden="true" />
       </button>
     </section>
 
