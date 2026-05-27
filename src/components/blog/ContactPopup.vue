@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {ref, watch} from 'vue'
 
+import { useBlogTheme } from '@/composables/useBlogTheme'
+
 interface Props {
   visible: boolean
   title: string
@@ -9,6 +11,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { isLightTheme } = useBlogTheme()
 
 const emit = defineEmits<{
   close: []
@@ -46,9 +49,10 @@ watch(
       <div
         v-if="visible"
         class="contact-popup-mask"
+        :class="{ 'is-night-theme': !isLightTheme }"
         @click="handleMaskClick"
       >
-        <div class="contact-popup-card">
+        <div class="contact-popup-card" :class="{ 'is-night-theme': !isLightTheme }">
           <button
             type="button"
             class="contact-popup-close"
@@ -84,6 +88,7 @@ watch(
           <div
             v-if="previewVisible"
             class="qr-preview-mask"
+            :class="{ 'is-night-theme': !isLightTheme }"
             @click="closePreview"
           >
             <button
@@ -123,6 +128,10 @@ watch(
   backdrop-filter: blur(12px);
 }
 
+.contact-popup-mask.is-night-theme {
+  background: rgba(2, 6, 23, 0.76);
+}
+
 .contact-popup-card {
   position: relative;
 
@@ -139,6 +148,13 @@ watch(
   inset 0 1px 0 rgba(255, 255, 255, 0.82);
 
   backdrop-filter: blur(20px);
+}
+
+.contact-popup-card.is-night-theme {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .contact-popup-close {
@@ -167,9 +183,18 @@ watch(
   background 0.18s ease;
 }
 
+.contact-popup-card.is-night-theme .contact-popup-close {
+  color: #cbd5e1;
+  background: rgba(51, 65, 85, 0.84);
+}
+
 .contact-popup-close:hover {
   transform: rotate(90deg);
   background: rgba(203, 213, 225, 0.92);
+}
+
+.contact-popup-card.is-night-theme .contact-popup-close:hover {
+  background: rgba(71, 85, 105, 0.96);
 }
 
 .contact-popup-header {
@@ -184,11 +209,19 @@ watch(
   font-weight: 800;
 }
 
+.contact-popup-card.is-night-theme .contact-popup-header h3 {
+  color: #f8fafc;
+}
+
 .contact-popup-header p {
   margin: 10px 0 0;
 
   color: #64748b;
   font-size: 14px;
+}
+
+.contact-popup-card.is-night-theme .contact-popup-header p {
+  color: #94a3b8;
 }
 
 .contact-popup-qrcode-wrapper {
@@ -272,6 +305,10 @@ watch(
 
   background: rgba(15, 23, 42, 0.72);
   backdrop-filter: blur(16px);
+}
+
+.qr-preview-mask.is-night-theme {
+  background: rgba(2, 6, 23, 0.84);
 }
 
 .qr-preview-image {
