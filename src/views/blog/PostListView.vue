@@ -4,7 +4,7 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
-import BackTop from '@/components/blog/BackTop.vue'
+import BlogSideActions from '@/components/blog/BlogSideActions.vue'
 import PostCard from '@/components/blog/PostCard.vue'
 import { useBlogTheme } from '@/composables/useBlogTheme'
 import { getPublishedPosts, type PostListItem } from '@/api/posts'
@@ -203,6 +203,9 @@ const quoteStyle = {
 const { isLightTheme } = useBlogTheme()
 
 const postsContainerRef = ref<HTMLElement | null>(null)
+const isEmbeddedPostsActive = ref(false)
+
+let postsVisibilityObserver: IntersectionObserver | undefined
 
 const isMobilePostList = ref(false)
 
@@ -229,6 +232,41 @@ const postPlaceholders = computed(() => {
     (_, index) => index
   )
 })
+
+const showSideActions = computed(() => {
+  return !props.embedded || isEmbeddedPostsActive.value
+})
+
+function setupPostsVisibilityObserver() {
+  if (!props.embedded) {
+    isEmbeddedPostsActive.value = true
+    return
+  }
+
+  const targetElement = postsContainerRef.value
+
+  if (!targetElement || typeof IntersectionObserver === 'undefined') {
+    isEmbeddedPostsActive.value = false
+    return
+  }
+
+  postsVisibilityObserver?.disconnect()
+  postsVisibilityObserver = new IntersectionObserver(
+    (entries) => {
+      isEmbeddedPostsActive.value = entries.some((entry) => entry.isIntersecting)
+    },
+    {
+      rootMargin: '-72px 0px -40% 0px',
+      threshold: [0, 0.08, 0.16]
+    }
+  )
+  postsVisibilityObserver.observe(targetElement)
+}
+
+function teardownPostsVisibilityObserver() {
+  postsVisibilityObserver?.disconnect()
+  postsVisibilityObserver = undefined
+}
 
 async function scrollToPostsContainer() {
   await nextTick()
@@ -323,6 +361,7 @@ onMounted(() => {
 
   startTypingSignature()
   void loadPublishedPosts()
+  void nextTick(() => setupPostsVisibilityObserver())
 })
 
 onBeforeUnmount(() => {
@@ -331,6 +370,7 @@ onBeforeUnmount(() => {
   }
 
   mobilePostListMediaQuery?.removeEventListener('change', handleMobilePostListChange)
+  teardownPostsVisibilityObserver()
 })
 </script>
 
@@ -489,7 +529,10 @@ onBeforeUnmount(() => {
       </section>
     </section>
     <BlogFooter/>
-    <BackTop/>
+    <BlogSideActions
+      v-if="showSideActions"
+      show-desktop-top
+    />
   </div>
 </template>
 

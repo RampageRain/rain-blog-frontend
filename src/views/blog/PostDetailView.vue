@@ -5,7 +5,7 @@ import { Icon } from '@iconify/vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
-import BackTop from '@/components/blog/BackTop.vue'
+import BlogSideActions from '@/components/blog/BlogSideActions.vue'
 import ContactPopup from '@/components/blog/ContactPopup.vue'
 import { getPostDetail, getPublishedPosts, type PostDetail, type PostListItem } from '@/api/posts'
 import { findMockPostDetail, mergeMockPostListItems, mockPostListItems } from '@/data/mockPosts'
@@ -49,6 +49,7 @@ type PaginationSlot = 'previous' | 'next'
 
 const route = useRoute()
 const { isLightTheme } = useBlogTheme()
+const siteTitle = 'Rain Blog'
 
 const post = ref<PostDetail | null>(null)
 const isLoading = ref(false)
@@ -109,6 +110,15 @@ const mobilePaginationCoverCrop: Record<PaginationSlot, { x: string; y: string }
     x: '50%',
     y: '80%'
   }
+}
+
+function updateDocumentTitle(pageTitle?: string) {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  const normalizedTitle = pageTitle?.trim()
+  document.title = normalizedTitle ? `${normalizedTitle} | ${siteTitle}` : siteTitle
 }
 
 function resolveImageFitMode(imageRatio: number, containerRatio: number): ImageFitMode {
@@ -901,6 +911,11 @@ void loadPublishedPostCards()
 
 watch(postId, loadPost, { immediate: true })
 watch(
+  () => post.value?.title || '',
+  (title) => updateDocumentTitle(title || '文章详情'),
+  { immediate: true }
+)
+watch(
   () => post.value?.summary || '',
   (summary) => startSummaryTyping(summary || '这篇文章还没有摘要。'),
   { immediate: true }
@@ -932,6 +947,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  updateDocumentTitle()
   disconnectHeadingObserver()
   clearSummaryTypingTimer()
   window.removeEventListener('scroll', updateReadingProgress)
@@ -1221,17 +1237,12 @@ onBeforeUnmount(() => {
 
     <BlogFooter />
     <div class="progress-bar" :style="{ width: `${readingProgress}%` }" aria-hidden="true"></div>
-    <button
-      v-if="tocItems.length"
-      class="floating-toc-button"
-      type="button"
-      :aria-label="isTocVisible ? '隐藏目录' : '显示目录'"
-      :title="isTocVisible ? '隐藏目录' : '显示目录'"
-      @click="toggleTocVisible"
-    >
-      <Icon icon="fa-solid:list-ul" aria-hidden="true" />
-    </button>
-    <BackTop />
+    <BlogSideActions
+      :show-toc="tocItems.length > 0"
+      :toc-active="isTocVisible"
+      show-desktop-top
+      @toggle-toc="toggleTocVisible"
+    />
 
     <Transition name="comment-modal-fade">
       <div
@@ -1425,39 +1436,6 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
 }
 
-.floating-toc-button {
-  position: fixed;
-  right: 15px;
-  bottom: 76px;
-  z-index: 998;
-
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  color: #ffffff;
-  background: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
-  box-shadow: 0 12px 26px rgba(1, 1, 254, 0.24);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-}
-
-.floating-toc-button:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.04);
-  box-shadow: 0 16px 32px rgba(1, 1, 254, 0.3);
-}
-
-.floating-toc-button svg {
-  width: 18px;
-  height: 18px;
-}
 
 .comment-modal-backdrop {
   position: fixed;
@@ -2684,8 +2662,8 @@ onBeforeUnmount(() => {
   }
 
   .reprint-row {
-    flex-direction: column;
-    gap: 2px;
+    display: block;
+    line-height: 1.9;
   }
 
   .article-head {
@@ -2740,9 +2718,6 @@ onBeforeUnmount(() => {
     line-height: 1.7;
   }
 
-  .floating-toc-button {
-    display: none;
-  }
 
   .comment-modal-card {
     padding: 24px 20px;

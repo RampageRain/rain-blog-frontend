@@ -32,7 +32,8 @@ onBeforeUnmount(() => {
       v-if="visible"
       type="button"
       class="top-scroll"
-      aria-label="Back to top"
+      aria-label="返回顶部"
+      title="返回顶部"
       @click="scrollToTop"
     >
       <Icon icon="fa-solid:arrow-up" aria-hidden="true" />

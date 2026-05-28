@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 
 type BlogTheme = 'night' | 'light'
+type BlogThemeMode = 'auto' | 'manual'
 
 const DAY_START_HOUR = 6
 const NIGHT_START_HOUR = 18
@@ -13,8 +14,27 @@ function getSystemTheme(date = new Date()): BlogTheme {
 }
 
 const theme = ref<BlogTheme>(getSystemTheme())
+const themeMode = ref<BlogThemeMode>('auto')
 
 function syncThemeWithSystemTime() {
+  if (themeMode.value === 'manual') {
+    return
+  }
+
+  theme.value = getSystemTheme()
+}
+
+function setTheme(nextTheme: BlogTheme) {
+  themeMode.value = 'manual'
+  theme.value = nextTheme
+}
+
+function toggleTheme() {
+  setTheme(theme.value === 'light' ? 'night' : 'light')
+}
+
+function resetThemeToSystem() {
+  themeMode.value = 'auto'
   theme.value = getSystemTheme()
 }
 
@@ -30,6 +50,10 @@ export function useBlogTheme() {
 
   return {
     theme,
-    isLightTheme
+    themeMode,
+    isLightTheme,
+    setTheme,
+    toggleTheme,
+    resetThemeToSystem
   }
 }
