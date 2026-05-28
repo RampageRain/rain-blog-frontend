@@ -6,6 +6,7 @@ import { Icon } from '@iconify/vue'
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
 import BlogSideActions from '@/components/blog/BlogSideActions.vue'
+import BlogMobileTocModal from '@/components/blog/BlogMobileTocModal.vue'
 import ContactPopup from '@/components/blog/ContactPopup.vue'
 import { getPostDetail, getPublishedPosts, type PostDetail, type PostListItem } from '@/api/posts'
 import { findMockPostDetail, mergeMockPostListItems, mockPostListItems } from '@/data/mockPosts'
@@ -488,6 +489,15 @@ function toggleTocVisible() {
   isTocVisible.value = !isTocVisible.value
 }
 
+function closeTocVisible() {
+  isTocVisible.value = false
+}
+
+function handleMobileTocSelect(id: string) {
+  setActiveTocId(id)
+  closeTocVisible()
+}
+
 function openWechatPopup() {
   contactPopup.value = {
     title: '微信联系',
@@ -627,6 +637,32 @@ async function setupHeadingObserver() {
 
 function setActiveTocId(id: string) {
   activeTocId.value = id
+}
+
+function updateActiveTocByScroll() {
+  if (typeof window === 'undefined' || !tocItems.value.length) {
+    return
+  }
+
+  const activeTop = Math.max(96, window.innerHeight * 0.22)
+  let currentId = tocItems.value[0]?.id || ''
+
+  for (const item of tocItems.value) {
+    const heading = document.getElementById(item.id)
+
+    if (!heading) {
+      continue
+    }
+
+    if (heading.getBoundingClientRect().top <= activeTop) {
+      currentId = item.id
+      continue
+    }
+
+    break
+  }
+
+  activeTocId.value = currentId
 }
 
 const renderedMarkdown = computed(() => {
@@ -926,6 +962,7 @@ watch(
     await setupHeadingObserver()
     await refreshResponsiveImageFits()
     updateReadingProgress()
+    updateActiveTocByScroll()
   },
   { immediate: true }
 )
@@ -940,8 +977,10 @@ watch(
 
 onMounted(() => {
   updateReadingProgress()
+  updateActiveTocByScroll()
   void refreshResponsiveImageFits()
   window.addEventListener('scroll', updateReadingProgress, { passive: true })
+  window.addEventListener('scroll', updateActiveTocByScroll, { passive: true })
   window.addEventListener('resize', updateReadingProgress)
   window.addEventListener('resize', refreshResponsiveImageFits)
 })
@@ -951,6 +990,7 @@ onBeforeUnmount(() => {
   disconnectHeadingObserver()
   clearSummaryTypingTimer()
   window.removeEventListener('scroll', updateReadingProgress)
+  window.removeEventListener('scroll', updateActiveTocByScroll)
   window.removeEventListener('resize', updateReadingProgress)
   window.removeEventListener('resize', refreshResponsiveImageFits)
   if (copyToastTimer !== undefined) {
@@ -1243,6 +1283,12 @@ onBeforeUnmount(() => {
       show-desktop-top
       @toggle-toc="toggleTocVisible"
     />
+    <BlogMobileTocModal
+      :visible="tocItems.length > 0 && isTocVisible"
+      :items="tocItems"
+      :active-id="activeTocId"
+            @select="handleMobileTocSelect"
+    />
 
     <Transition name="comment-modal-fade">
       <div
@@ -1326,7 +1372,7 @@ onBeforeUnmount(() => {
   --theme-cover-tint: rgba(15, 23, 42, 0.2);
   --post-card-min-height: 360px;
   --matery-rem: 14px;
-  --matery-body-font-family: Roboto, sans-serif;
+  --matery-body-font-family: var(--blog-font-family);
   --matery-label-font-family: var(--matery-body-font-family);
   --theme-reprint-border: #eeeeee;
   --theme-reprint-hover-shadow: 0 0 10px 0 rgba(232, 237, 250, 0.6),
@@ -2717,6 +2763,11 @@ onBeforeUnmount(() => {
     font-size: 14px;
     line-height: 1.7;
   }
+
+  .article-toc {
+    display: none;
+  }
+
 
 
   .comment-modal-card {

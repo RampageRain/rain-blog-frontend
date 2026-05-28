@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 
 import BlogSideToggle from '@/components/blog/BlogSideToggle.vue'
 import { useBlogTheme } from '@/composables/useBlogTheme'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     showToc?: boolean
     tocActive?: boolean
@@ -44,12 +44,16 @@ function handleDocumentPointerDown(event: PointerEvent) {
 
   const target = event.target
 
-  if (!(target instanceof Node)) {
+  if (!(target instanceof Element)) {
     return
   }
 
-  if (actionRoot.value?.contains(target)) {
+  if (actionRoot.value?.contains(target) || target.closest('.mobile-toc-modal-card')) {
     return
+  }
+
+  if (props.tocActive) {
+    emit('toggleToc')
   }
 
   closeActions()
@@ -62,7 +66,6 @@ function handleThemeClick() {
 
 function handleTocClick() {
   emit('toggleToc')
-  closeActions()
 }
 
 function handleJumpToPostsClick() {
@@ -78,14 +81,29 @@ function handleTopClick() {
   closeActions()
 }
 
+function handleWindowScroll() {
+  if (props.tocActive) {
+    return
+  }
+
+  closeActions()
+}
+
+watch(
+  () => props.tocActive,
+  (active) => {
+    isExpanded.value = active
+  }
+)
+
 onMounted(() => {
   document.addEventListener('pointerdown', handleDocumentPointerDown)
-  window.addEventListener('scroll', closeActions, { passive: true })
+  window.addEventListener('scroll', handleWindowScroll, { passive: true })
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', handleDocumentPointerDown)
-  window.removeEventListener('scroll', closeActions)
+  window.removeEventListener('scroll', handleWindowScroll)
 })
 </script>
 
@@ -112,7 +130,7 @@ onBeforeUnmount(() => {
       </button>
 
       <button
-        v-if="showJumpToPosts"
+        v-if="props.showJumpToPosts"
         type="button"
         class="blog-mobile-action blog-mobile-action--posts"
         aria-label="文章区域"
@@ -123,10 +141,10 @@ onBeforeUnmount(() => {
       </button>
 
       <button
-        v-if="showToc"
+        v-if="props.showToc"
         type="button"
         class="blog-mobile-action blog-mobile-action--toc"
-        :class="{ 'is-active': tocActive }"
+        :class="{ 'is-active': props.tocActive }"
         :aria-label="tocActive ? '隐藏目录' : '展开目录'"
         :title="tocActive ? '隐藏目录' : '展开目录'"
         @click="handleTocClick"
@@ -135,7 +153,7 @@ onBeforeUnmount(() => {
       </button>
 
       <button
-        v-if="showTop"
+        v-if="props.showTop"
         type="button"
         class="blog-mobile-action blog-mobile-action--top"
         aria-label="返回顶部"
