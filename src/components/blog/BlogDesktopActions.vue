@@ -72,6 +72,12 @@ const { isLightTheme, toggleTheme } = useBlogTheme()
   width: 48px;
   height: 48px;
   padding: 0;
+  min-width: 48px;
+  min-height: 48px;
+  max-width: 48px;
+  max-height: 48px;
+  flex: 0 0 48px;
+  line-height: 1;
   border-radius: 50%;
 
   display: inline-flex;
@@ -127,8 +133,8 @@ const { isLightTheme, toggleTheme } = useBlogTheme()
 }
 
 .blog-desktop-theme-button svg {
-  width: 21px;
-  height: 21px;
+  width: 22px;
+  height: 22px;
 }
 
 .blog-desktop-toc-button svg {
@@ -138,7 +144,7 @@ const { isLightTheme, toggleTheme } = useBlogTheme()
 
 .blog-desktop-actions.is-night-theme .blog-desktop-theme-button {
   color: #fbbf24;
-  border-color: rgba(148, 163, 184, 0.2);
+  border-color: rgba(255, 255, 255, 0.72);
   background: rgba(15, 23, 42, 0.82);
   box-shadow:
     0 12px 26px rgba(0, 0, 0, 0.34),

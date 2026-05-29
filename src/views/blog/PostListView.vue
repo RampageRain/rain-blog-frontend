@@ -584,6 +584,8 @@ onBeforeUnmount(() => {
   --theme-pagination-disabled-color: rgba(100, 116, 139, 0.72);
   --theme-pagination-info-text: #0f172a;
   --post-card-min-height: 360px;
+  --post-card-cover-height: 190px;
+  --post-card-cover-height-mobile: 180px;
 
   position: relative;
   min-height: 100vh;
@@ -1033,6 +1035,7 @@ onBeforeUnmount(() => {
 .posts-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
   gap: 28px;
 }
 
@@ -1070,6 +1073,7 @@ onBeforeUnmount(() => {
 
   .posts-page {
     --post-card-min-height: 340px;
+    --post-card-cover-height: 180px;
   }
 
   .posts-container {
@@ -1080,6 +1084,7 @@ onBeforeUnmount(() => {
 @media (max-width: 640px) {
   .posts-page {
     --post-card-min-height: 0px;
+    --post-card-cover-height-mobile: 178px;
 
     padding-top: 84px;
   }

@@ -28,6 +28,12 @@ const emit = defineEmits<{
 const { isLightTheme, toggleTheme } = useBlogTheme()
 const isExpanded = ref(false)
 const actionRoot = ref<HTMLElement | null>(null)
+const isMobile = ref(false)
+let mobileMediaQuery: MediaQueryList | undefined
+
+function syncMobileViewport() {
+  isMobile.value = mobileMediaQuery?.matches ?? false
+}
 
 function closeActions() {
   isExpanded.value = false
@@ -38,6 +44,11 @@ function toggleActions() {
 }
 
 function handleDocumentPointerDown(event: PointerEvent) {
+  // 仅在手机端处理外部点击；PC 端目录由桌面端目录按钮单独控制
+  if (!isMobile.value) {
+    return
+  }
+
   if (!isExpanded.value) {
     return
   }
@@ -61,7 +72,11 @@ function handleDocumentPointerDown(event: PointerEvent) {
 
 function handleThemeClick() {
   toggleTheme()
-  closeActions()
+
+  // 目录展开时切换日夜间模式，目录卡片与展开面板保持展开
+  if (!props.tocActive) {
+    closeActions()
+  }
 }
 
 function handleTocClick() {
@@ -78,10 +93,21 @@ function handleTopClick() {
     top: 0,
     behavior: 'smooth'
   })
+
+  // 目录已展开时点击置顶：隐藏目录并恢复卡扣模式
+  if (props.tocActive) {
+    emit('toggleToc')
+  }
+
   closeActions()
 }
 
 function handleWindowScroll() {
+  // 仅手机端在滚动时自动收起卡扣面板
+  if (!isMobile.value) {
+    return
+  }
+
   if (props.tocActive) {
     return
   }
@@ -97,11 +123,15 @@ watch(
 )
 
 onMounted(() => {
+  mobileMediaQuery = window.matchMedia('(max-width: 768px)')
+  syncMobileViewport()
+  mobileMediaQuery.addEventListener('change', syncMobileViewport)
   document.addEventListener('pointerdown', handleDocumentPointerDown)
   window.addEventListener('scroll', handleWindowScroll, { passive: true })
 })
 
 onBeforeUnmount(() => {
+  mobileMediaQuery?.removeEventListener('change', syncMobileViewport)
   document.removeEventListener('pointerdown', handleDocumentPointerDown)
   window.removeEventListener('scroll', handleWindowScroll)
 })

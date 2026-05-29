@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+
+type ImageFitMode = 'fill-width' | 'fill-height'
 
 interface PostCardItem {
   id: number | string
@@ -27,19 +29,40 @@ const imageLoading = computed(() => (props.index < 2 ? 'eager' : 'lazy'))
 const imageFetchPriority = computed(() => (props.index === 0 ? 'high' : 'auto'))
 const tags = computed(() => props.post.tags ?? [])
 const hasAction = computed(() => Boolean(props.post.category) || tags.value.length > 0)
+const coverRef = ref<HTMLElement | null>(null)
+const coverFitMode = ref<ImageFitMode>('fill-width')
+
+function updateCoverFit(event: Event) {
+  const image = event.target
+
+  if (!(image instanceof HTMLImageElement) || !image.naturalWidth || !image.naturalHeight) {
+    return
+  }
+
+  const cover = coverRef.value
+  const coverRatio =
+    cover && cover.clientWidth && cover.clientHeight
+      ? cover.clientWidth / cover.clientHeight
+      : 16 / 9
+  const imageRatio = image.naturalWidth / image.naturalHeight
+
+  coverFitMode.value = imageRatio >= coverRatio ? 'fill-height' : 'fill-width'
+}
 </script>
 
 <template>
   <article class="post-card">
     <RouterLink class="post-card-link" :to="`/posts/${post.id}`">
-      <div class="post-cover">
+      <div ref="coverRef" class="post-cover">
         <img
           class="post-cover-image"
+          :class="`is-${coverFitMode}`"
           :src="post.cover"
           :alt="post.title"
           :loading="imageLoading"
           :fetchpriority="imageFetchPriority"
           decoding="async"
+          @load="updateCoverFit"
         />
 
         <div class="post-cover-mask">
@@ -60,18 +83,20 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
         </div>
 
         <div class="post-card-action" :class="{ 'is-empty': !hasAction }">
-          <div class="article-tags">
-            <span
-              v-if="post.category"
-              class="chip bg-color"
-              :class="{ 'grey-chip': post.category === '未分类' }"
-            >
-              {{ post.category }}
-            </span>
+          <div class="post-card-action-body">
+            <div class="article-tags">
+              <span
+                v-if="post.category"
+                class="chip bg-color"
+                :class="{ 'grey-chip': post.category === '未分类' }"
+              >
+                {{ post.category }}
+              </span>
 
-            <span v-for="tag in tags" :key="tag" class="chip bg-color">
-              {{ tag }}
-            </span>
+              <span v-for="tag in tags" :key="tag" class="chip bg-color">
+                {{ tag }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -82,6 +107,7 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
 <style scoped>
 .post-card {
   overflow: hidden;
+  height: 100%;
   min-height: var(--post-card-min-height);
   display: flex;
   flex-direction: column;
@@ -102,6 +128,7 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
 }
 
 .post-card-link {
+  height: 100%;
   min-height: var(--post-card-min-height);
   display: flex;
   flex: 1;
@@ -115,27 +142,38 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
   position: relative;
   overflow: hidden;
   display: block;
+  flex: 0 0 var(--post-card-cover-height, 190px);
+  height: var(--post-card-cover-height, 190px);
 
   border-radius: 8px 8px 0 0;
 }
 
 .post-cover-image {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   z-index: 1;
 
-  width: 100%;
-  height: auto;
   display: block;
-
   object-fit: initial;
   object-position: center;
-  transform: scale(1);
+  transform: translate(-50%, -50%) scale(1);
   transform-origin: center;
   transition: transform 0.3s ease;
 }
 
+.post-cover-image.is-fill-width {
+  width: 100%;
+  height: auto;
+}
+
+.post-cover-image.is-fill-height {
+  width: auto;
+  height: 100%;
+}
+
 .post-card:hover .post-cover-image {
-  transform: scale(1.035);
+  transform: translate(-50%, -50%) scale(1.035);
 }
 
 .post-cover-mask {
@@ -169,7 +207,7 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
 
 .post-content {
   min-height: 0;
-  padding: 15px 15px 14px 18px;
+  padding: 15px 15px 0 18px;
 
   display: flex;
   flex: 1;
@@ -205,12 +243,12 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
 .post-card-action {
   position: relative;
 
-  min-height: 0;
-  margin-top: 6px;
-  padding: 4px 0 0;
+  margin-top: auto;
+  padding-top: 1px;
 
   display: flex;
-  align-items: center;
+  flex: 0 0 auto;
+  min-height: 52px;
 
   border-radius: 0 0 8px 8px !important;
   box-sizing: border-box;
@@ -232,13 +270,22 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
   visibility: hidden;
 }
 
-.article-tags {
+.post-card-action-body {
   width: 100%;
-  min-height: 0;
-  margin-top: 10px;
+  min-height: 37px;
 
   display: flex;
   align-items: center;
+}
+
+.article-tags {
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+  align-content: center;
   flex-wrap: wrap;
   gap: 4px;
 
@@ -273,6 +320,11 @@ const hasAction = computed(() => Boolean(props.post.category) || tags.value.leng
 }
 
 @media (max-width: 640px) {
+  .post-cover {
+    flex-basis: var(--post-card-cover-height-mobile, 180px);
+    height: var(--post-card-cover-height-mobile, 180px);
+  }
+
   .post-content {
     min-height: 0;
   }
