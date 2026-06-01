@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
 import { useAuthStore } from '@/stores/auth'
@@ -11,6 +11,7 @@ import mobileDrawerBg from '@/assets/images/intro-card-img.jpg'
 
 const authStore = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 
 const mobileMenuOpen = ref(false)
 type ImageFitMode = 'fill-width' | 'fill-height'
@@ -106,6 +107,18 @@ function isCurrentPath(path: string) {
   return route.path === path
 }
 
+// 是否正在阅读文章正文（详情页）：此时移动端左侧汉堡按钮变为"返回上一页"
+const isArticleReading = computed(() => route.name === 'postDetail')
+
+function goBack() {
+  // 有站内历史则返回上一页，否则兜底回到首页文章区
+  if (window.history.state?.back) {
+    router.back()
+  } else {
+    void router.push({ path: '/', hash: '#home-posts' })
+  }
+}
+
 function openMobileMenu() {
   mobileMenuOpen.value = true
 }
@@ -191,10 +204,10 @@ onUnmounted(() => {
     <button
       type="button"
       class="mobile-menu-button"
-      aria-label="打开菜单"
-      @click="openMobileMenu"
+      :aria-label="isArticleReading ? '返回上一页' : '打开菜单'"
+      @click="isArticleReading ? goBack() : openMobileMenu()"
     >
-      <Icon icon="fa-solid:bars" aria-hidden="true" />
+      <Icon :icon="isArticleReading ? 'fa-solid:arrow-left' : 'fa-solid:bars'" aria-hidden="true" />
     </button>
 
     <Teleport to="body">

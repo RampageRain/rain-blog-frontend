@@ -9,7 +9,6 @@ import BlogSideActions from '@/components/blog/BlogSideActions.vue'
 import BlogMobileTocModal from '@/components/blog/BlogMobileTocModal.vue'
 import ContactPopup from '@/components/blog/ContactPopup.vue'
 import { getPostDetail, getPublishedPosts, type PostDetail, type PostListItem } from '@/api/posts'
-import { findMockPostDetail, mergeMockPostListItems, mockPostListItems } from '@/data/mockPosts'
 import { useBlogTheme } from '@/composables/useBlogTheme'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
@@ -255,68 +254,6 @@ function updateReadingProgress() {
   )
 }
 
-function createMockPostDetail(id: number | string): PostDetail {
-  const mockPostDetail = findMockPostDetail(id)
-
-  if (mockPostDetail) {
-    return mockPostDetail
-  }
-
-  return {
-    id: Number(id) || 1,
-    title: '在雨声里写下第一篇博客',
-    summary:
-      '这是一篇用于预览文章详情页效果的本地假数据。它会先展示出来，方便你观察背景、卡片、标题、摘要和正文排版。',
-    category: '前端随笔',
-    coverKey: 'home-bg-1',
-    date: '2026-05-25',
-    views: 128,
-    contentMd: `# 文章详情页效果预览
-
-今天想先把文章详情页的视觉效果跑通：背景图跟随日夜间自动切换，文章主体卡片保持不透明，让文字阅读起来更加稳定。
-
-## 为什么先用假数据
-
-后端详情接口还没有完全接上时，前端页面很容易一直停留在加载失败状态。先准备一份本地数据，可以提前确认页面结构是否舒服。
-
-### 前端可以先验证什么
-
-- 标题、摘要、分类和元信息的位置
-- Markdown 标题是否渲染成真正的 H1、H2、H3
-- 代码块、引用、列表的阅读效果
-- 右侧文章大纲是否能快速跳转
-
-## 代码块效果
-
-下面是一段 TypeScript 示例代码，用来观察代码块的背景、字体和间距：
-
-\`\`\`ts
-interface PostDetail {
-  id: number
-  title: string
-  summary: string
-  contentMd: string
-}
-
-function formatPostTitle(post: PostDetail) {
-  return '文章：' + post.title
-}
-\`\`\`
-
-也可以看看行内代码，例如 \`getPostDetail(id)\` 会请求文章详情接口。
-
-## 引用效果
-
-> 好的博客详情页不只是把文字展示出来，还要让读者能舒服地阅读、定位和回看重点。
-
-## 下一步
-
-等后端提供 \`GET /api/posts/{id}\` 之后，这份假数据可以删除，页面会直接展示接口返回的真实文章内容。
-
-保持热爱，继续把博客一点点完善起来。`
-  }
-}
-
 function toAdjacentPost(postItem: PostListItem): AdjacentPost {
   return {
     id: postItem.id,
@@ -337,10 +274,11 @@ async function loadPublishedPostCards() {
     })
 
     if (response.data.code === 200) {
-      publishedPostCards.value = mergeMockPostListItems(response.data.data?.records ?? []).map(toAdjacentPost)
+      publishedPostCards.value = (response.data.data?.records ?? []).map(toAdjacentPost)
     }
-  } catch {
-    publishedPostCards.value = mockPostListItems.map(toAdjacentPost)
+  } catch (error) {
+    console.error('相邻文章加载失败：', error)
+    publishedPostCards.value = []
   }
 }
 
@@ -407,35 +345,7 @@ const currentPostCard = computed<AdjacentPost>(() => {
   }
 })
 
-const fallbackPostCards = computed<AdjacentPost[]>(() => {
-  const currentId = currentPostCard.value.id
-
-  return [
-    {
-      id: Math.max(currentId - 1, 1),
-      title: 'ReentrantLock 使用笔记',
-      summary: '从可重入锁、公平锁和条件队列几个角度复习并发编程基础。',
-      date: '2026-05-24',
-      category: 'Java并发',
-      views: 96,
-      cover: postCover2
-    },
-    currentPostCard.value,
-    {
-      id: currentId + 1,
-      title: 'volatile 关键字整理',
-      summary: '理解可见性、有序性以及 volatile 在并发场景中的边界。',
-      date: '2026-05-26',
-      category: 'Java并发',
-      views: 142,
-      cover: postCover3
-    }
-  ]
-})
-
-const orderedPostCards = computed(() => {
-  return publishedPostCards.value.length ? publishedPostCards.value : fallbackPostCards.value
-})
+const orderedPostCards = computed(() => publishedPostCards.value)
 
 const neighborEntries = computed<Record<'previous' | 'next', NeighborEntry>>(() => {
   const currentId = currentPostCard.value.id
@@ -925,8 +835,7 @@ async function loadPost() {
 
   isLoading.value = true
   errorMessage.value = ''
-  post.value = createMockPostDetail(postId.value)
-  isLoading.value = false
+  post.value = null
 
   try {
     const response = await getPostDetail(postId.value)
@@ -935,9 +844,12 @@ async function loadPost() {
       return
     }
 
-    post.value = createMockPostDetail(postId.value)
-  } catch {
-    post.value = createMockPostDetail(postId.value)
+    post.value = null
+    errorMessage.value = response.data.message || '文章不存在'
+  } catch (error) {
+    console.error('文章详情加载失败：', error)
+    post.value = null
+    errorMessage.value = '文章加载失败，请稍后重试'
   } finally {
     isLoading.value = false
   }
@@ -1201,7 +1113,7 @@ onBeforeUnmount(() => {
                 <div class="info-1">
                   <div class="info-item-1">
                     <Icon
-                      :icon="neighborEntries.previous.slot === 'current' ? 'fa-solid:circle-dot' : 'fa-solid:arrow-left'"
+                      :icon="neighborEntries.previous.slot === 'current' ? 'fa-solid:dot-circle' : 'fa-solid:arrow-left'"
                       aria-hidden="true"
                     />
                     {{ neighborEntries.previous.label }}
@@ -1233,7 +1145,7 @@ onBeforeUnmount(() => {
                   <div class="info-item-1">
                     {{ neighborEntries.next.label }}
                     <Icon
-                      :icon="neighborEntries.next.slot === 'current' ? 'fa-solid:circle-dot' : 'fa-solid:arrow-right'"
+                      :icon="neighborEntries.next.slot === 'current' ? 'fa-solid:dot-circle' : 'fa-solid:arrow-right'"
                       aria-hidden="true"
                     />
                   </div>
@@ -1372,8 +1284,6 @@ onBeforeUnmount(() => {
   --theme-cover-tint: rgba(15, 23, 42, 0.2);
   --post-card-min-height: 360px;
   --matery-rem: 14px;
-  --matery-body-font-family: var(--blog-font-family);
-  --matery-label-font-family: var(--matery-body-font-family);
   --theme-reprint-border: #eeeeee;
   --theme-reprint-hover-shadow: 0 0 10px 0 rgba(232, 237, 250, 0.6),
     0 4px 8px 0 rgba(232, 237, 250, 0.5);
@@ -1402,7 +1312,7 @@ onBeforeUnmount(() => {
 .post-detail-page :deep(pre),
 .post-detail-page :deep(.code-language),
 .post-detail-page :deep(.code-line-content) {
-  font-family: Inconsolata, Monaco, Consolas, 'Courier New', monospace;
+  font-family: var(--blog-mono-font-family);
 }
 
 .post-detail-page.is-night-theme {
@@ -1446,7 +1356,7 @@ onBeforeUnmount(() => {
 
   color: rgba(255, 255, 255, 0.9);
   font-size: 1rem;
-  font-family: var(--matery-label-font-family);
+  font-family: var(--blog-font-family);
   font-weight: 500;
   letter-spacing: normal;
   line-height: 1.5;
@@ -1868,20 +1778,20 @@ onBeforeUnmount(() => {
 .article-content {
   padding: 32px 38px 20px;
   color: var(--theme-text);
-  font-family: var(--matery-body-font-family);
+  font-family: var(--blog-font-family);
   font-size: var(--matery-rem);
   line-height: calc(var(--matery-rem) * 1.5);
 }
 
 .article-content :deep(*) {
-  font-family: var(--matery-body-font-family);
+  font-family: var(--blog-font-family);
 }
 
 .article-content :deep(code),
 .article-content :deep(pre),
 .article-content :deep(.code-language),
 .article-content :deep(.code-line-content) {
-  font-family: Inconsolata, Monaco, Consolas, 'Courier New', monospace;
+  font-family: var(--blog-mono-font-family);
 }
 
 .article-content :deep(h1),
@@ -1995,7 +1905,7 @@ onBeforeUnmount(() => {
 .article-content :deep(code) {
   padding: 2px 6px;
   color: var(--theme-inline-code-text);
-  font-family: Inconsolata, Monaco, Consolas, 'Courier New', monospace;
+  font-family: var(--blog-mono-font-family);
   font-size: calc(var(--matery-rem) * 0.91);
   background: var(--theme-inline-code-bg);
   border-radius: 4px;
@@ -2145,7 +2055,7 @@ onBeforeUnmount(() => {
   top: 12px;
   left: 72px;
   color: rgba(203, 213, 225, 0.68);
-  font-family: Consolas, Monaco, monospace;
+  font-family: var(--blog-code-lang-font-family);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -2191,7 +2101,7 @@ onBeforeUnmount(() => {
   flex: 0 0 auto;
 
   color: var(--theme-text);
-  font-family: var(--matery-label-font-family);
+  font-family: var(--blog-font-family);
   font-size: var(--matery-rem);
   font-weight: bold;
   line-height: 2;
@@ -2356,18 +2266,8 @@ onBeforeUnmount(() => {
   font-size: 90%;
 }
 
-.pagination-related.prev-post .info .info-1 .info-item-1 svg {
-  position: absolute;
-  right: calc(100% + 8px);
-}
-
 .pagination-related.next-post .info .info-1 .info-item-1 {
   justify-content: flex-end;
-}
-
-.pagination-related.next-post .info .info-1 .info-item-1 svg {
-  position: absolute;
-  left: calc(100% + 8px);
 }
 
 .pagination-related .info .info-1 .info-item-2 {
@@ -2443,7 +2343,7 @@ onBeforeUnmount(() => {
 
   color: var(--theme-text);
   font-size: 1.5rem;
-  font-family: var(--matery-label-font-family);
+  font-family: var(--blog-font-family);
   font-weight: bold;
   letter-spacing: normal;
   line-height: 1.5rem;
@@ -2464,7 +2364,7 @@ onBeforeUnmount(() => {
   padding: 1px 0;
   color: var(--theme-muted);
   font-size: 0.9rem;
-  font-family: var(--matery-label-font-family);
+  font-family: var(--blog-font-family);
   font-weight: 400;
   letter-spacing: normal;
   line-height: 1.55;
@@ -2691,20 +2591,6 @@ onBeforeUnmount(() => {
   .pagination-related .info .info-1,
   .pagination-related .info .info-2 {
     padding: 18px 22px;
-  }
-
-  .pagination-related.next-post .info,
-  .pagination-related .info.text-right {
-    text-align: left;
-  }
-
-  .pagination-related.next-post .info .info-1 .info-item-1 {
-    justify-content: flex-start;
-  }
-
-  .pagination-related.prev-post .info .info-1 .info-item-1 svg,
-  .pagination-related.next-post .info .info-1 .info-item-1 svg {
-    position: static;
   }
 
   .reprint-row {

@@ -8,7 +8,6 @@ import BlogSideActions from '@/components/blog/BlogSideActions.vue'
 import PostCard from '@/components/blog/PostCard.vue'
 import { useBlogTheme } from '@/composables/useBlogTheme'
 import { getPublishedPosts, type PostListItem } from '@/api/posts'
-import { mergeMockPostListItems, mockPostListItems } from '@/data/mockPosts'
 
 import postCover1 from '@/assets/images/home-bg-1.jpg'
 import postCover2 from '@/assets/images/home-bg-2.jpg'
@@ -70,7 +69,6 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 const totalPosts = ref(0)
 const posts = ref<Post[]>([])
-const isClientPaginated = ref(false)
 const isPostLoading = ref(false)
 const postErrorMessage = ref('')
 
@@ -90,13 +88,8 @@ function toPost(post: PostListItem): Post {
 function setPostList(records: PostListItem[], total?: number, pages?: number, page = currentPage.value) {
   posts.value = records.map(toPost)
 
-  if (isClientPaginated.value) {
-    totalPosts.value = records.length
-    totalPages.value = Math.max(1, Math.ceil(records.length / postPageSize))
-  } else {
-    totalPosts.value = Math.max(total ?? records.length, records.length)
-    totalPages.value = Math.max(1, pages ?? Math.ceil(records.length / postPageSize))
-  }
+  totalPosts.value = Math.max(total ?? records.length, records.length)
+  totalPages.value = Math.max(1, pages ?? Math.ceil(records.length / postPageSize))
 
   currentPage.value = Math.min(Math.max(1, page), totalPages.value)
 }
@@ -113,19 +106,19 @@ async function loadPublishedPosts(page = currentPage.value) {
 
     if (res.data.code === 200) {
       const pageData = res.data.data
-      isClientPaginated.value = mockPostListItems.length > 0
-      const records = mergeMockPostListItems(pageData?.records ?? [])
-
-      setPostList(records, pageData?.total, pageData?.pages, pageData?.current ?? page)
+      setPostList(
+        pageData?.records ?? [],
+        pageData?.total,
+        pageData?.pages,
+        pageData?.current ?? page
+      )
       return
     }
 
     postErrorMessage.value = res.data.message || '文章加载失败'
   } catch (error) {
     console.error('文章列表加载失败：', error)
-    isClientPaginated.value = true
-    setPostList(mockPostListItems, mockPostListItems.length, 1, 1)
-    postErrorMessage.value = ''
+    postErrorMessage.value = '文章加载失败，请稍后重试'
   } finally {
     isPostLoading.value = false
   }
@@ -213,14 +206,7 @@ const showIntroCard = computed(() => {
   return !isMobilePostList.value && currentPage.value === 1
 })
 
-const paginatedPosts = computed(() => {
-  if (!isClientPaginated.value) {
-    return posts.value
-  }
-
-  const start = (currentPage.value - 1) * postPageSize
-  return posts.value.slice(start, start + postPageSize)
-})
+const paginatedPosts = computed(() => posts.value)
 
 const postPlaceholders = computed(() => {
   if (paginatedPosts.value.length === 0) {
@@ -290,12 +276,6 @@ async function scrollToPostsContainer() {
 
 async function setCurrentPage(page: number) {
   if (page < 1 || page > totalPages.value || page === currentPage.value) {
-    return
-  }
-
-  if (isClientPaginated.value) {
-    currentPage.value = page
-    await scrollToPostsContainer()
     return
   }
 
