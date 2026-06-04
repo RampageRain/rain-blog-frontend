@@ -15,6 +15,7 @@ import homeBg5 from '@/assets/images/home-bg-5.jpg'
 import homeBg6 from '@/assets/images/home-bg-6.jpg'
 import homeBg7 from '@/assets/images/home-bg-7.jpg'
 import homeBg8 from '@/assets/images/home-bg-8.jpg'
+import homeBg9 from '@/assets/images/home-bg-9.jpg'
 import homeBgMobile1 from '@/assets/images/home-bg-mobile-1.jpg'
 import loginBgMobile from '@/assets/images/login-bg-mobile.jpg'
 
@@ -29,7 +30,8 @@ const desktopBackgroundImages = [
   homeBg5,
   homeBg6,
   homeBg7,
-  homeBg8
+  homeBg8,
+  homeBg9
 ]
 
 const mobileBackgroundImages = [

@@ -31,6 +31,12 @@ const publicMenus = [
   { label: '关于', path: '/about', icon: 'fa-solid:user-circle' }
 ]
 
+const studioMenus = [
+  { label: '创建文章', hash: '#create', icon: 'fa-solid:pen-nib' },
+  { label: '编辑文章', hash: '#edit', icon: 'fa-solid:edit' },
+  { label: '删除文章', hash: '#delete', icon: 'fa-solid:trash-alt' }
+]
+
 function resolveImageFitMode(imageRatio: number, containerRatio: number): ImageFitMode {
   return imageRatio >= containerRatio ? 'fill-height' : 'fill-width'
 }
@@ -131,6 +137,11 @@ function handleSearchClick() {
   closeMobileMenu()
 }
 
+function handleStudioNavClick(hash: string) {
+  closeMobileMenu()
+  void router.push({ path: '/studio/dashboard', hash })
+}
+
 watch(mobileMenuOpen, (open) => {
   document.body.style.overflow = open ? 'hidden' : ''
 
@@ -181,7 +192,7 @@ onUnmounted(() => {
 
       <RouterLink
         v-if="authStore.isLogin"
-        to="/studio/dashboard"
+        :to="{ path: '/studio/dashboard', hash: '#create' }"
         class="nav-item"
         :class="{ 'nav-active': isCurrentPath('/studio/dashboard') }"
         active-class=""
@@ -251,7 +262,7 @@ onUnmounted(() => {
 
               <RouterLink
                 v-if="authStore.isLogin"
-                to="/studio/dashboard"
+                :to="{ path: '/studio/dashboard', hash: '#create' }"
                 class="mobile-menu-item"
                 :class="{ 'mobile-active': isCurrentPath('/studio/dashboard') }"
                 @click="closeMobileMenu"

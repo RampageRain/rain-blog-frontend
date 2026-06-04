@@ -4,6 +4,7 @@ import LoginView from "@/views/studio/LoginView.vue";
 import DashboardView from "@/views/studio/DashboardView.vue";
 import PostListView from "@/views/blog/PostListView.vue";
 import PostDetailView from "@/views/blog/PostDetailView.vue";
+import AboutView from "@/views/blog/AboutView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,11 @@ const router = createRouter({
       path: '/posts/:id',
       name: 'postDetail',
       component: PostDetailView
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: AboutView
     },
     {
       path: '/studio/dashboard',
