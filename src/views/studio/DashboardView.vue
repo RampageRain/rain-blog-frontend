@@ -815,40 +815,6 @@ const goToPage = (page: number) => {
   font: inherit;
   font-size: 16px;
   line-height: 1;
-  transition:
-    transform 0.2s,
-    background 0.2s,
-    border-color 0.2s,
-    box-shadow 0.2s;
-}
-
-.post-actions button:hover {
-  background: rgba(226, 232, 240, 0.18);
-  border-color: rgba(226, 232, 240, 0.46);
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.28);
-  transform: translateY(-2px);
-}
-
-.post-actions button svg {
-  transition: color 0.2s ease;
-}
-
-.post-actions button.preview:hover svg {
-  color: #22c55e;
-}
-
-.post-actions button.edit:hover svg {
-  color: #3b82f6;
-}
-
-.post-actions button.danger:hover {
-  background: rgba(226, 232, 240, 0.18);
-  border-color: rgba(226, 232, 240, 0.46);
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.28);
-}
-
-.post-actions button.danger:hover svg {
-  color: #ef4444;
 }
 
 .post-actions button span {
@@ -902,10 +868,6 @@ const goToPage = (page: number) => {
 .post-cover-image.is-fill-height {
   width: auto;
   height: 100%;
-}
-
-.post-cover:hover .post-cover-image {
-  transform: translate(-50%, -50%) scale(1.06);
 }
 
 .studio-pagination {

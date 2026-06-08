@@ -116,15 +116,7 @@ function updateCoverFit(event: Event) {
   border-radius: 8px;
   box-shadow: var(--theme-card-shadow);
   backdrop-filter: blur(10px);
-  transition:
-    background 0.28s ease,
-    transform 0.22s ease,
-    box-shadow 0.22s ease;
-}
-
-.post-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--theme-card-hover-shadow);
+  transition: background 0.28s ease;
 }
 
 .post-card-link {
@@ -170,10 +162,6 @@ function updateCoverFit(event: Event) {
 .post-cover-image.is-fill-height {
   width: auto;
   height: 100%;
-}
-
-.post-card:hover .post-cover-image {
-  transform: translate(-50%, -50%) scale(1.035);
 }
 
 .post-cover-mask {
