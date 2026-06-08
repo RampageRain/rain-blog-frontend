@@ -59,11 +59,10 @@ const activeTocId = ref('')
 const typedSummary = ref('')
 const copyToastVisible = ref(false)
 const isTocVisible = ref(false)
-const readingProgress = ref(0)
 const articleHeadCoverFitMode = ref<ImageFitMode>('fill-width')
 const paginationCoverFitModes = ref<Record<PaginationSlot, ImageFitMode>>({
   previous: 'fill-width',
-  next: 'fill-width'
+  next: 'fill-width',
 })
 const commentModalVisible = ref(false)
 const commentAuthor = ref('')
@@ -74,7 +73,7 @@ const contactPopupVisible = ref(false)
 const contactPopup = ref({
   title: '',
   account: '',
-  qrCode: ''
+  qrCode: '',
 })
 let headingObserver: IntersectionObserver | null = null
 let summaryTypingTimer: number | undefined
@@ -88,7 +87,7 @@ const postCoverMap: Record<string, string> = {
   'home-bg-3': postCover3,
   'home-bg-4': postCover4,
   'home-bg-5': postCover5,
-  'home-bg-6': postCover6
+  'home-bg-6': postCover6,
 }
 
 const isMobileViewport = () => {
@@ -98,18 +97,18 @@ const isMobileViewport = () => {
 const mobileArticleHeadCrop = {
   x: '50%',
   y: '50%',
-  scale: 1
+  scale: 1,
 }
 
 const mobilePaginationCoverCrop: Record<PaginationSlot, { x: string; y: string }> = {
   previous: {
     x: '50%',
-    y: '80%'
+    y: '80%',
   },
   next: {
     x: '50%',
-    y: '80%'
-  }
+    y: '80%',
+  },
 }
 
 function updateDocumentTitle(pageTitle?: string) {
@@ -156,7 +155,8 @@ async function loadImageRatio(imageUrl: string) {
   return new Promise<number>((resolve) => {
     const image = new Image()
     image.onload = () => {
-      const ratio = image.naturalWidth && image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1
+      const ratio =
+        image.naturalWidth && image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1
       imageRatioCache.set(imageUrl, ratio)
       resolve(ratio)
     }
@@ -172,7 +172,7 @@ async function refreshArticleHeadImageFit() {
 
   const headContainerRatio = getElementRatio(
     '.article-head',
-    isMobileViewport() ? window.innerWidth / Math.max(window.innerHeight * 0.46, 300) : 16 / 9
+    isMobileViewport() ? window.innerWidth / Math.max(window.innerHeight * 0.46, 300) : 16 / 9,
   )
   const headImageRatio = await loadImageRatio(articleCoverImage.value)
   articleHeadCoverFitMode.value = resolveImageFitMode(headImageRatio, headContainerRatio)
@@ -186,18 +186,21 @@ async function refreshPaginationCoverFits() {
   if (!isMobileViewport()) {
     paginationCoverFitModes.value = {
       previous: 'fill-width',
-      next: 'fill-width'
+      next: 'fill-width',
     }
     return
   }
 
-  const paginationContainerRatio = getElementRatio('#pagination .prev-post', (window.innerWidth * 0.95) / 132)
+  const paginationContainerRatio = getElementRatio(
+    '#pagination .prev-post',
+    (window.innerWidth * 0.95) / 132,
+  )
   const previousImageRatio = await loadImageRatio(neighborEntries.value.previous.post.cover)
   const nextImageRatio = await loadImageRatio(neighborEntries.value.next.post.cover)
 
   paginationCoverFitModes.value = {
     previous: resolveImageFitMode(previousImageRatio, paginationContainerRatio),
-    next: resolveImageFitMode(nextImageRatio, paginationContainerRatio)
+    next: resolveImageFitMode(nextImageRatio, paginationContainerRatio),
   }
 }
 
@@ -222,7 +225,7 @@ const articleHeadCoverStyle = computed(() => {
   return {
     top: mobileArticleHeadCrop.y,
     left: mobileArticleHeadCrop.x,
-    transform: `translate(-50%, -50%) scale(${mobileArticleHeadCrop.scale})`
+    transform: `translate(-50%, -50%) scale(${mobileArticleHeadCrop.scale})`,
   }
 })
 
@@ -231,27 +234,8 @@ const paginationCoverStyle = (slot: PaginationSlot) => {
 
   return {
     top: crop.y,
-    left: crop.x
+    left: crop.x,
   }
-}
-
-function updateReadingProgress() {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return
-  }
-
-  const scrollingElement = document.scrollingElement || document.documentElement
-  const maxScrollTop = scrollingElement.scrollHeight - scrollingElement.clientHeight
-
-  if (maxScrollTop <= 0) {
-    readingProgress.value = 0
-    return
-  }
-
-  readingProgress.value = Math.min(
-    100,
-    Math.max(0, (scrollingElement.scrollTop / maxScrollTop) * 100)
-  )
 }
 
 function toAdjacentPost(postItem: PostListItem): AdjacentPost {
@@ -262,7 +246,7 @@ function toAdjacentPost(postItem: PostListItem): AdjacentPost {
     date: postItem.date,
     category: postItem.category,
     views: postItem.views,
-    cover: postCoverMap[postItem.coverKey] || postCover1
+    cover: postCoverMap[postItem.coverKey] || postCover1,
   }
 }
 
@@ -270,7 +254,7 @@ async function loadPublishedPostCards() {
   try {
     const response = await getPublishedPosts({
       current: 1,
-      pageSize: 100
+      pageSize: 100,
     })
 
     if (response.data.code === 200) {
@@ -289,12 +273,8 @@ const postId = computed(() => {
 
 const pageStyle = computed(() => {
   const currentBackground = isLightTheme.value ? postListBgLight : postListBgNight
-  const overlayStart = isLightTheme.value
-    ? 'rgba(255, 255, 255, 0.18)'
-    : 'rgba(0, 0, 0, 0.46)'
-  const overlayEnd = isLightTheme.value
-    ? 'rgba(255, 255, 255, 0.28)'
-    : 'rgba(0, 0, 0, 0.56)'
+  const overlayStart = isLightTheme.value ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.46)'
+  const overlayEnd = isLightTheme.value ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 0, 0, 0.56)'
 
   return {
     backgroundImage: `
@@ -303,7 +283,7 @@ const pageStyle = computed(() => {
         ${overlayEnd}
       ),
       url(${currentBackground})
-    `
+    `,
   }
 })
 
@@ -341,7 +321,7 @@ const currentPostCard = computed<AdjacentPost>(() => {
     date: currentPost?.date || '',
     category: currentPost?.category || '未分类',
     views: currentPost?.views ?? 0,
-    cover: articleCoverImage.value
+    cover: articleCoverImage.value,
   }
 })
 
@@ -359,24 +339,24 @@ const neighborEntries = computed<Record<'previous' | 'next', NeighborEntry>>(() 
       ? {
           slot: 'previous',
           label: '上一篇',
-          post: previousPost
+          post: previousPost,
         }
       : {
           slot: 'current',
           label: '本篇',
-          post: currentPostCard.value
+          post: currentPostCard.value,
         },
     next: nextPost
       ? {
           slot: 'next',
           label: '下一篇',
-          post: nextPost
+          post: nextPost,
         }
       : {
           slot: 'current',
           label: '本篇',
-          post: currentPostCard.value
-        }
+          post: currentPostCard.value,
+        },
   }
 })
 
@@ -390,7 +370,7 @@ const tocItems = computed<TocItem[]>(() => {
     return {
       id: createHeadingId(text, index),
       text,
-      level: marker.length
+      level: marker.length,
     }
   })
 })
@@ -412,7 +392,7 @@ function openWechatPopup() {
   contactPopup.value = {
     title: '微信联系',
     account: 'Rain119813',
-    qrCode: wechatQrCode
+    qrCode: wechatQrCode,
   }
   contactPopupVisible.value = true
 }
@@ -421,7 +401,7 @@ function openQQPopup() {
   contactPopup.value = {
     title: 'QQ 联系',
     account: '1192924906',
-    qrCode: qqQrCode
+    qrCode: qqQrCode,
   }
   contactPopupVisible.value = true
 }
@@ -531,8 +511,8 @@ async function setupHeadingObserver() {
     },
     {
       rootMargin: '-18% 0px -68% 0px',
-      threshold: 0
-    }
+      threshold: 0,
+    },
   )
 
   tocItems.value.forEach((item) => {
@@ -621,14 +601,19 @@ function countMarkdownWords(markdown: string) {
     .trim()
 
   const chineseCharacters = plainText.match(/[\u4e00-\u9fa5]/g)?.length || 0
-  const latinWords = plainText.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/g)?.length || 0
+  const latinWords =
+    plainText.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/g)
+      ?.length || 0
 
   return chineseCharacters + latinWords
 }
 
-const copyIconSvg = '<svg viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16h140.1L400 115.9V320c0 8.8-7.2 16-16 16zM192 384h192c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1C357.1 5.1 344.9 0 332.1 0H192c-35.3 0-64 28.7-64 64v256c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64v256c0 35.3 28.7 64 64 64h192c35.3 0 64-28.7 64-64v-32h-48v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16h32v-48H64z"/></svg>'
-const collapseIconSvg = '<svg class="collapse-icon" viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160z"/></svg>'
-const expandIconSvg = '<svg class="expand-icon" viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z"/></svg>'
+const copyIconSvg =
+  '<svg viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16h140.1L400 115.9V320c0 8.8-7.2 16-16 16zM192 384h192c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1C357.1 5.1 344.9 0 332.1 0H192c-35.3 0-64 28.7-64 64v256c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64v256c0 35.3 28.7 64 64 64h192c35.3 0 64-28.7 64-64v-32h-48v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16h32v-48H64z"/></svg>'
+const collapseIconSvg =
+  '<svg class="collapse-icon" viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M201.4 137.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 205.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160z"/></svg>'
+const expandIconSvg =
+  '<svg class="expand-icon" viewBox="0 0 448 512" aria-hidden="true"><path fill="currentColor" d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z"/></svg>'
 
 function renderCodeLines(lines: string[]) {
   const targetLines = lines.length ? lines : ['']
@@ -636,7 +621,7 @@ function renderCodeLines(lines: string[]) {
   return targetLines
     .map((line, index) => {
       return `<span class="code-line"><span class="code-line-number">${index + 1}</span><span class="code-line-content">${escapeHtml(
-        line
+        line,
       )}</span></span>`
     })
     .join('')
@@ -666,15 +651,17 @@ function renderMarkdown(markdown: string) {
       return
     }
 
-    htmlParts.push(`<ul>${listItems.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ul>`)
+    htmlParts.push(
+      `<ul>${listItems.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ul>`,
+    )
     listItems = []
   }
 
   function flushCodeBlock() {
     htmlParts.push(
       `<div class="code-block-wrapper"><div class="code-toolbar"><button class="code-action-button code-copy-button" type="button" aria-label="复制代码" title="复制代码">${copyIconSvg}</button><button class="code-action-button code-toggle-button" type="button" aria-label="收起代码" title="收起代码">${collapseIconSvg}${expandIconSvg}</button></div><pre class="code-block"><span class="code-language">${escapeHtml(
-        codeLanguage || 'text'
-      )}</span><code>${renderCodeLines(codeLines)}</code></pre></div>`
+        codeLanguage || 'text',
+      )}</span><code>${renderCodeLines(codeLines)}</code></pre></div>`,
     )
     codeLines = []
     codeLanguage = ''
@@ -815,7 +802,7 @@ function handleArticleContentClick(event: MouseEvent) {
   }
 
   const codeText = Array.from(
-    copyButton.closest('.code-block-wrapper')?.querySelectorAll('.code-line-content') || []
+    copyButton.closest('.code-block-wrapper')?.querySelectorAll('.code-line-content') || [],
   )
     .map((line) => line.textContent || '')
     .join('\n')
@@ -861,39 +848,39 @@ watch(postId, loadPost, { immediate: true })
 watch(
   () => post.value?.title || '',
   (title) => updateDocumentTitle(title || '文章详情'),
-  { immediate: true }
+  { immediate: true },
 )
 watch(
   () => post.value?.summary || '',
   (summary) => startSummaryTyping(summary || '这篇文章还没有摘要。'),
-  { immediate: true }
+  { immediate: true },
 )
 watch(
   renderedMarkdown,
   async () => {
     await setupHeadingObserver()
     await refreshResponsiveImageFits()
-    updateReadingProgress()
     updateActiveTocByScroll()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 watch(
-  () => [articleCoverImage.value, neighborEntries.value.previous.post.cover, neighborEntries.value.next.post.cover],
+  () => [
+    articleCoverImage.value,
+    neighborEntries.value.previous.post.cover,
+    neighborEntries.value.next.post.cover,
+  ],
   () => {
     void refreshResponsiveImageFits()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 onMounted(() => {
-  updateReadingProgress()
   updateActiveTocByScroll()
   void refreshResponsiveImageFits()
-  window.addEventListener('scroll', updateReadingProgress, { passive: true })
   window.addEventListener('scroll', updateActiveTocByScroll, { passive: true })
-  window.addEventListener('resize', updateReadingProgress)
   window.addEventListener('resize', refreshResponsiveImageFits)
 })
 
@@ -901,9 +888,7 @@ onBeforeUnmount(() => {
   updateDocumentTitle()
   disconnectHeadingObserver()
   clearSummaryTypingTimer()
-  window.removeEventListener('scroll', updateReadingProgress)
   window.removeEventListener('scroll', updateActiveTocByScroll)
-  window.removeEventListener('resize', updateReadingProgress)
   window.removeEventListener('resize', refreshResponsiveImageFits)
   if (copyToastTimer !== undefined) {
     window.clearTimeout(copyToastTimer)
@@ -919,7 +904,7 @@ onBeforeUnmount(() => {
     class="post-detail-page"
     :class="{
       'is-light-theme': isLightTheme,
-      'is-night-theme': !isLightTheme
+      'is-night-theme': !isLightTheme,
     }"
     :style="pageStyle"
   >
@@ -931,9 +916,7 @@ onBeforeUnmount(() => {
         返回文章列表
       </RouterLink>
 
-      <section v-if="isLoading" class="post-state-card">
-        正在加载文章...
-      </section>
+      <section v-if="isLoading" class="post-state-card">正在加载文章...</section>
 
       <section v-else-if="errorMessage" class="post-state-card is-error">
         {{ errorMessage }}
@@ -1014,84 +997,77 @@ onBeforeUnmount(() => {
                 v-html="renderedMarkdown"
               ></section>
 
-            <hr class="article-reprint-divider" />
+              <hr class="article-reprint-divider" />
 
-            <section id="reprint-statement" class="reprint-card">
-              <div class="reprint-row">
-                <span class="reprint-meta">
-                  <Icon
-                    icon="fa-solid:user"
-                    class="reprint-fa-icon"
-                    aria-hidden="true"
-                  />
-                  文章作者：
-                </span>
-                <RouterLink class="reprint-info" to="/about">Rain</RouterLink>
-              </div>
+              <section id="reprint-statement" class="reprint-card">
+                <div class="reprint-row">
+                  <span class="reprint-meta">
+                    <Icon icon="fa-solid:user" class="reprint-fa-icon" aria-hidden="true" />
+                    文章作者：
+                  </span>
+                  <RouterLink class="reprint-info" to="/about">Rain</RouterLink>
+                </div>
 
-              <div class="reprint-row">
-                <span class="reprint-meta">
-                  <Icon
-                    icon="fa-solid:link"
-                    class="reprint-fa-icon"
-                    aria-hidden="true"
-                  />
-                  文章链接：
-                </span>
-                <a class="reprint-info" :href="postPermalink">{{ postPermalink }}</a>
-              </div>
+                <div class="reprint-row">
+                  <span class="reprint-meta">
+                    <Icon icon="fa-solid:link" class="reprint-fa-icon" aria-hidden="true" />
+                    文章链接：
+                  </span>
+                  <a class="reprint-info" :href="postPermalink">{{ postPermalink }}</a>
+                </div>
 
-              <div class="reprint-row">
-                <span class="reprint-meta">
-                  <Icon
-                    icon="fa-solid:copyright"
-                    class="reprint-fa-icon"
-                    aria-hidden="true"
-                  />
-                  版权声明：
-                </span>
-                <span class="reprint-info">
-                  本博客所有文章除特别声明外，均采用
-                  <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>
-                  许可协议。转载请注明来源
-                  <RouterLink to="/about">Rain</RouterLink>。
-                </span>
-              </div>
-            </section>
+                <div class="reprint-row">
+                  <span class="reprint-meta">
+                    <Icon icon="fa-solid:copyright" class="reprint-fa-icon" aria-hidden="true" />
+                    版权声明：
+                  </span>
+                  <span class="reprint-info">
+                    本博客所有文章除特别声明外，均采用
+                    <a
+                      href="https://creativecommons.org/licenses/by/4.0/deed.zh"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >CC BY 4.0</a
+                    >
+                    许可协议。转载请注明来源
+                    <RouterLink to="/about">Rain</RouterLink>。
+                  </span>
+                </div>
+              </section>
 
-            <section class="tag-share-card" aria-label="联系方式和评论">
-              <div class="post-contact-actions">
-                <button
-                  class="contact-circle contact-circle--qq"
-                  type="button"
-                  aria-label="查看 QQ 联系方式"
-                  title="QQ 联系"
-                  @click="openQQPopup"
-                >
-                  <Icon icon="fa-brands:qq" aria-hidden="true" />
-                </button>
+              <section class="tag-share-card" aria-label="联系方式和评论">
+                <div class="post-contact-actions">
+                  <button
+                    class="contact-circle contact-circle--qq"
+                    type="button"
+                    aria-label="查看 QQ 联系方式"
+                    title="QQ 联系"
+                    @click="openQQPopup"
+                  >
+                    <Icon icon="fa-brands:qq" aria-hidden="true" />
+                  </button>
 
-                <button
-                  class="contact-circle contact-circle--wechat"
-                  type="button"
-                  aria-label="查看微信联系方式"
-                  title="微信联系"
-                  @click="openWechatPopup"
-                >
-                  <Icon icon="fa-brands:weixin" aria-hidden="true" />
-                </button>
+                  <button
+                    class="contact-circle contact-circle--wechat"
+                    type="button"
+                    aria-label="查看微信联系方式"
+                    title="微信联系"
+                    @click="openWechatPopup"
+                  >
+                    <Icon icon="fa-brands:weixin" aria-hidden="true" />
+                  </button>
 
-                <button
-                  class="contact-circle contact-circle--comment"
-                  type="button"
-                  aria-label="发表评论"
-                  title="评论"
-                  @click="openCommentModal"
-                >
-                  <Icon icon="fa-regular:comment-dots" aria-hidden="true" />
-                </button>
-              </div>
-            </section>
+                  <button
+                    class="contact-circle contact-circle--comment"
+                    type="button"
+                    aria-label="发表评论"
+                    title="评论"
+                    @click="openCommentModal"
+                  >
+                    <Icon icon="fa-regular:comment-dots" aria-hidden="true" />
+                  </button>
+                </div>
+              </section>
             </div>
           </article>
 
@@ -1113,7 +1089,11 @@ onBeforeUnmount(() => {
                 <div class="info-1">
                   <div class="info-item-1">
                     <Icon
-                      :icon="neighborEntries.previous.slot === 'current' ? 'fa-solid:dot-circle' : 'fa-solid:arrow-left'"
+                      :icon="
+                        neighborEntries.previous.slot === 'current'
+                          ? 'fa-solid:dot-circle'
+                          : 'fa-solid:arrow-left'
+                      "
                       aria-hidden="true"
                     />
                     {{ neighborEntries.previous.label }}
@@ -1122,7 +1102,9 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="info-2">
-                  <div class="info-item-1">{{ neighborEntries.previous.post.summary || '暂无摘要' }}</div>
+                  <div class="info-item-1">
+                    {{ neighborEntries.previous.post.summary || '暂无摘要' }}
+                  </div>
                 </div>
               </div>
             </RouterLink>
@@ -1145,7 +1127,11 @@ onBeforeUnmount(() => {
                   <div class="info-item-1">
                     {{ neighborEntries.next.label }}
                     <Icon
-                      :icon="neighborEntries.next.slot === 'current' ? 'fa-solid:dot-circle' : 'fa-solid:arrow-right'"
+                      :icon="
+                        neighborEntries.next.slot === 'current'
+                          ? 'fa-solid:dot-circle'
+                          : 'fa-solid:arrow-right'
+                      "
                       aria-hidden="true"
                     />
                   </div>
@@ -1153,7 +1139,9 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="info-2">
-                  <div class="info-item-1">{{ neighborEntries.next.post.summary || '暂无摘要' }}</div>
+                  <div class="info-item-1">
+                    {{ neighborEntries.next.post.summary || '暂无摘要' }}
+                  </div>
                 </div>
               </div>
             </RouterLink>
@@ -1174,7 +1162,7 @@ onBeforeUnmount(() => {
                 :class="[
                   'toc-link',
                   `is-level-${item.level}`,
-                  { 'is-active': activeTocId === item.id }
+                  { 'is-active': activeTocId === item.id },
                 ]"
                 :href="`#${item.id}`"
                 @click="setActiveTocId(item.id)"
@@ -1188,7 +1176,6 @@ onBeforeUnmount(() => {
     </main>
 
     <BlogFooter />
-    <div class="progress-bar" :style="{ width: `${readingProgress}%` }" aria-hidden="true"></div>
     <BlogSideActions
       :show-toc="tocItems.length > 0"
       :toc-active="isTocVisible"
@@ -1199,7 +1186,7 @@ onBeforeUnmount(() => {
       :visible="tocItems.length > 0 && isTocVisible"
       :items="tocItems"
       :active-id="activeTocId"
-            @select="handleMobileTocSelect"
+      @select="handleMobileTocSelect"
     />
 
     <Transition name="comment-modal-fade">
@@ -1212,7 +1199,12 @@ onBeforeUnmount(() => {
         @click.self="closeCommentModal"
       >
         <section class="comment-modal-card">
-          <button class="comment-modal-close" type="button" aria-label="关闭评论弹窗" @click="closeCommentModal">
+          <button
+            class="comment-modal-close"
+            type="button"
+            aria-label="关闭评论弹窗"
+            @click="closeCommentModal"
+          >
             ×
           </button>
           <h2 id="commentModalTitle">发表评论</h2>
@@ -1224,7 +1216,11 @@ onBeforeUnmount(() => {
           </label>
           <label>
             联系方式
-            <input v-model="commentContact" type="text" placeholder="邮箱、QQ 或微信，方便我反馈交流" />
+            <input
+              v-model="commentContact"
+              type="text"
+              placeholder="邮箱、QQ 或微信，方便我反馈交流"
+            />
           </label>
           <label>
             评论
@@ -1238,7 +1234,10 @@ onBeforeUnmount(() => {
 
           <div class="comment-modal-backup">
             <span>如果不方便留言，</span>
-            <a class="comment-mail-link" href="mailto:18687419361@163.com?subject=Rain%20Blog%20文章交流">
+            <a
+              class="comment-mail-link"
+              href="mailto:18687419361@163.com?subject=Rain%20Blog%20文章交流"
+            >
               <Icon icon="fa-regular:envelope" aria-hidden="true" />
               也可以邮件交流
             </a>
@@ -1274,20 +1273,19 @@ onBeforeUnmount(() => {
   --theme-inline-code-text: #1d4ed8;
   --theme-code-bg: #272822;
   --theme-code-text: #e8eaf6;
-  --theme-chip-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
-  --theme-muted-chip-bg: linear-gradient(to right, #0000FF 0%, #4169E1 100%);
+  --theme-chip-bg: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
+  --theme-muted-chip-bg: linear-gradient(to right, #0000ff 0%, #4169e1 100%);
   --theme-toc-bg: rgba(255, 255, 255, 0.96);
-  --theme-card-shadow: 0 15px 35px rgba(50, 50, 93, 0.1),
-    0 5px 15px rgba(0, 0, 0, 0.07);
-  --theme-card-hover-shadow: 0 18px 38px rgba(50, 50, 93, 0.14),
-    0 8px 18px rgba(0, 0, 0, 0.09);
+  --theme-card-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+  --theme-card-hover-shadow: 0 18px 38px rgba(50, 50, 93, 0.14), 0 8px 18px rgba(0, 0, 0, 0.09);
   --theme-cover-tint: rgba(15, 23, 42, 0.2);
   --post-card-min-height: 360px;
   --matery-rem: 14px;
   --theme-reprint-border: #eeeeee;
-  --theme-reprint-hover-shadow: 0 0 10px 0 rgba(232, 237, 250, 0.6),
-    0 4px 8px 0 rgba(232, 237, 250, 0.5);
-  --theme-shadow: 0 10px 35px 2px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.07),
+  --theme-reprint-hover-shadow:
+    0 0 10px 0 rgba(232, 237, 250, 0.6), 0 4px 8px 0 rgba(232, 237, 250, 0.5);
+  --theme-shadow:
+    0 10px 35px 2px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.07),
     0 2px 5px -5px rgba(0, 0, 0, 0.1);
 
   min-height: 100vh;
@@ -1327,17 +1325,15 @@ onBeforeUnmount(() => {
   --theme-inline-code-text: #93c5fd;
   --theme-code-bg: #020617;
   --theme-code-text: #dbeafe;
-  --theme-chip-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
-  --theme-muted-chip-bg: linear-gradient(to right, #0000FF 0%, #4169E1 100%);
+  --theme-chip-bg: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
+  --theme-muted-chip-bg: linear-gradient(to right, #0000ff 0%, #4169e1 100%);
   --theme-toc-bg: rgba(15, 23, 42, 0.96);
-  --theme-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  --theme-card-hover-shadow: 0 22px 48px rgba(0, 0, 0, 0.3),
-    inset 0 0 0 1px rgba(147, 197, 253, 0.18);
+  --theme-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --theme-card-hover-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(147, 197, 253, 0.18);
   --theme-cover-tint: rgba(2, 6, 23, 0.32);
   --theme-reprint-border: rgba(226, 232, 240, 0.16);
-  --theme-reprint-hover-shadow: 0 0 10px 0 rgba(15, 23, 42, 0.36),
-    0 4px 8px 0 rgba(0, 0, 0, 0.24);
+  --theme-reprint-hover-shadow: 0 0 10px 0 rgba(15, 23, 42, 0.36), 0 4px 8px 0 rgba(0, 0, 0, 0.24);
   --theme-shadow: 0 20px 44px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
@@ -1362,7 +1358,9 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   text-decoration: none;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .back-link:hover {
@@ -1392,7 +1390,6 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
 }
 
-
 .comment-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1412,7 +1409,8 @@ onBeforeUnmount(() => {
   color: var(--theme-text);
   border: 1px solid rgba(255, 255, 255, 0.68);
   background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22),
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px);
 }
@@ -1420,7 +1418,8 @@ onBeforeUnmount(() => {
 .post-detail-page.is-night-theme .comment-modal-card {
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(15, 23, 42, 0.92);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32),
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
@@ -1445,7 +1444,9 @@ onBeforeUnmount(() => {
   font-size: calc(var(--matery-rem) * 0.92);
   line-height: 1.5;
   text-decoration: none;
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
 }
 
 .comment-mail-link:hover {
@@ -1528,7 +1529,7 @@ onBeforeUnmount(() => {
   color: #ffffff;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+  background: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
   cursor: pointer;
 }
 
@@ -1544,7 +1545,9 @@ onBeforeUnmount(() => {
 
 .copy-toast-enter-active,
 .copy-toast-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .copy-toast-enter-from,
@@ -1689,7 +1692,11 @@ onBeforeUnmount(() => {
   background: rgba(15, 23, 42, 0.22);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
   backdrop-filter: blur(8px);
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .article-chip:hover {
@@ -1761,18 +1768,6 @@ onBeforeUnmount(() => {
 
 .mobile-article-divider {
   display: none;
-}
-
-.progress-bar {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  z-index: 300;
-  width: 0;
-  height: 4px;
-  opacity: 0.8;
-  pointer-events: none;
-  background: var(--theme-chip-bg);
 }
 
 .article-content {
@@ -1939,7 +1934,11 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.52);
   cursor: pointer;
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .article-content :deep(.code-action-button:hover),
@@ -2007,7 +2006,9 @@ onBeforeUnmount(() => {
   height: 12px;
   border-radius: 50%;
   background: #ff5f56;
-  box-shadow: 20px 0 #ffbd2e, 40px 0 #27c93f;
+  box-shadow:
+    20px 0 #ffbd2e,
+    40px 0 #27c93f;
 }
 
 .article-content :deep(.code-block code) {
@@ -2162,7 +2163,11 @@ onBeforeUnmount(() => {
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
   cursor: pointer;
   text-decoration: none;
-  transition: color 0.28s ease, background 0.28s ease, transform 0.28s ease, box-shadow 0.28s ease;
+  transition:
+    color 0.28s ease,
+    background 0.28s ease,
+    transform 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
 .post-detail-page.is-night-theme .contact-circle {
@@ -2229,7 +2234,10 @@ onBeforeUnmount(() => {
   transform: translateY(-10%);
   opacity: 0.4;
   filter: blur(0);
-  transition: transform 0.6s ease, opacity 0.6s ease, filter 375ms ease-in 0.2s;
+  transition:
+    transform 0.6s ease,
+    opacity 0.6s ease,
+    filter 375ms ease-in 0.2s;
 }
 
 .pagination-related .info {
@@ -2253,7 +2261,9 @@ onBeforeUnmount(() => {
   color: #ffffff;
   box-sizing: border-box;
   transform: translate(0, -50%);
-  transition: transform 0.3s, opacity 0.3s;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
 }
 
 .pagination-related .info .info-1 .info-item-1 {
@@ -2369,7 +2379,9 @@ onBeforeUnmount(() => {
   letter-spacing: normal;
   line-height: 1.55;
   text-decoration: none;
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
 }
 
 .toc-link.is-active {
@@ -2433,7 +2445,8 @@ onBeforeUnmount(() => {
     overflow: hidden;
     background: var(--theme-card-bg);
     border-radius: 8px;
-    box-shadow: 0 10px 35px 2px rgba(0, 0, 0, 0.15),
+    box-shadow:
+      0 10px 35px 2px rgba(0, 0, 0, 0.15),
       0 5px 15px rgba(0, 0, 0, 0.07),
       0 2px 5px -5px rgba(0, 0, 0, 0.1);
   }
@@ -2470,7 +2483,7 @@ onBeforeUnmount(() => {
     line-height: 24px;
     text-decoration: none;
     border-radius: 15px;
-    background: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+    background: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
   }
 
   .mobile-article-meta {
@@ -2653,8 +2666,6 @@ onBeforeUnmount(() => {
   .article-toc {
     display: none;
   }
-
-
 
   .comment-modal-card {
     padding: 24px 20px;

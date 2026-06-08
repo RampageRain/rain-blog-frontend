@@ -16,8 +16,8 @@ const props = withDefaults(
     showToc: false,
     tocActive: false,
     showTop: true,
-    showJumpToPosts: false
-  }
+    showJumpToPosts: false,
+  },
 )
 
 const emit = defineEmits<{
@@ -91,7 +91,7 @@ function handleJumpToPostsClick() {
 function handleTopClick() {
   window.scrollTo({
     top: 0,
-    behavior: 'smooth'
+    behavior: 'smooth',
   })
 
   // 目录已展开时点击置顶：隐藏目录并恢复卡扣模式
@@ -119,7 +119,7 @@ watch(
   () => props.tocActive,
   (active) => {
     isExpanded.value = active
-  }
+  },
 )
 
 onMounted(() => {
@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
     class="blog-mobile-actions"
     :class="{
       'is-night-theme': !isLightTheme,
-      'is-expanded': isExpanded
+      'is-expanded': isExpanded,
     }"
   >
     <BlogSideToggle v-if="!isExpanded" @toggle="toggleActions" />

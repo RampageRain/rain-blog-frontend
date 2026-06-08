@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios'
 
 const request = axios.create({
   baseURL: '/api',
@@ -11,22 +11,22 @@ request.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  return config;
+  return config
 })
 
 // 响应拦截器：后端返回统一处理
 request.interceptors.response.use(
   (response) => {
-    return response;
+    return response
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('rain_blog_token');
-      localStorage.removeItem('rain_blog_admin');
-      window.location.href = '/studio/login';
+      localStorage.removeItem('rain_blog_token')
+      localStorage.removeItem('rain_blog_admin')
+      window.location.href = '/studio/login'
     }
-    return Promise.reject(error);
-  }
+    return Promise.reject(error)
+  },
 )
 
 export default request

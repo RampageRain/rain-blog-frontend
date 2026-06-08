@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {Icon} from '@iconify/vue'
-import {computed, nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
+import { Icon } from '@iconify/vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
@@ -49,8 +49,8 @@ const props = withDefaults(
   }>(),
   {
     embedded: false,
-    sectionId: 'posts'
-  }
+    sectionId: 'posts',
+  },
 )
 
 const postCoverMap: Record<string, string> = {
@@ -59,7 +59,7 @@ const postCoverMap: Record<string, string> = {
   'home-bg-3': postCover3,
   'home-bg-4': postCover4,
   'home-bg-5': postCover5,
-  'home-bg-6': postCover6
+  'home-bg-6': postCover6,
 }
 
 const defaultPostCover = postCover1
@@ -81,11 +81,16 @@ function toPost(post: PostListItem): Post {
     tags: [],
     date: post.date,
     views: post.views,
-    cover: postCoverMap[post.coverKey] ?? defaultPostCover
+    cover: postCoverMap[post.coverKey] ?? defaultPostCover,
   }
 }
 
-function setPostList(records: PostListItem[], total?: number, pages?: number, page = currentPage.value) {
+function setPostList(
+  records: PostListItem[],
+  total?: number,
+  pages?: number,
+  page = currentPage.value,
+) {
   posts.value = records.map(toPost)
 
   totalPosts.value = Math.max(total ?? records.length, records.length)
@@ -101,7 +106,7 @@ async function loadPublishedPosts(page = currentPage.value) {
   try {
     const res = await getPublishedPosts({
       current: page,
-      pageSize: postPageSize
+      pageSize: postPageSize,
     })
 
     if (res.data.code === 200) {
@@ -110,7 +115,7 @@ async function loadPublishedPosts(page = currentPage.value) {
         pageData?.records ?? [],
         pageData?.total,
         pageData?.pages,
-        pageData?.current ?? page
+        pageData?.current ?? page,
       )
       return
     }
@@ -127,23 +132,23 @@ async function loadPublishedPosts(page = currentPage.value) {
 const introMetas: IntroMeta[] = [
   {
     icon: 'fa-solid:map-marker-alt',
-    text: '中国'
+    text: '中国',
   },
   {
     icon: 'fa-solid:book',
-    text: '持续创作中'
+    text: '持续创作中',
   },
   {
     icon: 'fa-solid:code',
-    text: '代码即生活'
-  }
+    text: '代码即生活',
+  },
 ]
 
 const profileStatIcons: Record<ProfileStat['type'], string> = {
   article: 'fa-regular:file-alt',
   category: 'fa-solid:layer-group',
   tag: 'fa-solid:tags',
-  view: 'fa-regular:eye'
+  view: 'fa-regular:eye',
 }
 
 function formatStatNumber(value: number) {
@@ -169,28 +174,28 @@ const profileStats = computed<ProfileStat[]>(() => {
     {
       type: 'article',
       label: '文章',
-      value: String(totalPosts.value)
+      value: String(totalPosts.value),
     },
     {
       type: 'category',
       label: '分类',
-      value: String(new Set(categories).size)
+      value: String(new Set(categories).size),
     },
     {
       type: 'tag',
       label: '标签',
-      value: String(new Set(tags).size)
+      value: String(new Set(tags).size),
     },
     {
       type: 'view',
       label: '访问',
-      value: formatStatNumber(views)
-    }
+      value: formatStatNumber(views),
+    },
   ]
 })
 
 const quoteStyle = {
-  backgroundImage: `url(${quoteBg})`
+  backgroundImage: `url(${quoteBg})`,
 }
 
 const { isLightTheme } = useBlogTheme()
@@ -215,7 +220,7 @@ const postPlaceholders = computed(() => {
 
   return Array.from(
     { length: Math.max(0, postPageSize - paginatedPosts.value.length) },
-    (_, index) => index
+    (_, index) => index,
   )
 })
 
@@ -243,8 +248,8 @@ function setupPostsVisibilityObserver() {
     },
     {
       rootMargin: '-72px 0px -40% 0px',
-      threshold: [0, 0.08, 0.16]
-    }
+      threshold: [0, 0.08, 0.16],
+    },
   )
   postsVisibilityObserver.observe(targetElement)
 }
@@ -270,7 +275,7 @@ async function scrollToPostsContainer() {
 
   window.scrollTo({
     top: targetTop,
-    behavior: 'smooth'
+    behavior: 'smooth',
   })
 }
 
@@ -285,12 +290,8 @@ async function setCurrentPage(page: number) {
 
 const pageStyle = computed(() => {
   const currentBackground = isLightTheme.value ? postListBgLight : postListBgNight
-  const overlayStart = isLightTheme.value
-    ? 'rgba(255, 255, 255, 0.18)'
-    : 'rgba(0, 0, 0, 0.46)'
-  const overlayEnd = isLightTheme.value
-    ? 'rgba(255, 255, 255, 0.28)'
-    : 'rgba(0, 0, 0, 0.58)'
+  const overlayStart = isLightTheme.value ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.46)'
+  const overlayEnd = isLightTheme.value ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 0, 0, 0.58)'
 
   return {
     backgroundImage: `
@@ -299,7 +300,7 @@ const pageStyle = computed(() => {
         ${overlayEnd}
       ),
       url(${currentBackground})
-    `
+    `,
   }
 })
 
@@ -362,54 +363,44 @@ onBeforeUnmount(() => {
       {
         'is-embedded': props.embedded,
         'is-light-theme': isLightTheme,
-        'is-night-theme': !isLightTheme
-      }
+        'is-night-theme': !isLightTheme,
+      },
     ]"
     :style="pageStyle"
   >
-    <BlogNavbar v-if="!props.embedded"/>
+    <BlogNavbar v-if="!props.embedded" />
 
     <section class="posts-content">
       <section v-if="showIntroCard" class="intro-card" :style="quoteStyle">
         <div class="intro-layout">
           <div class="intro-info-panel">
             <div class="avatar-wrapper">
-              <img class="intro-avatar" :src="avatar" alt="Rain Blog"/>
+              <img class="intro-avatar" :src="avatar" alt="Rain Blog" />
             </div>
 
             <div class="intro-basic">
               <h2>Rain</h2>
 
-              <p class="intro-role">
-                全栈开发者 · 技术记录者 · 探索者
-              </p>
+              <p class="intro-role">全栈开发者 · 技术记录者 · 探索者</p>
 
               <p class="intro-signature">
                 记录 Java 后端、Vue 前端与全栈成长，分享学习心得和项目实践。
               </p>
 
               <div class="intro-meta">
-          <span
-            v-for="meta in introMetas"
-            :key="meta.text"
-            class="intro-meta-item"
-          >
-            <Icon :icon="meta.icon" aria-hidden="true" />
+                <span v-for="meta in introMetas" :key="meta.text" class="intro-meta-item">
+                  <Icon :icon="meta.icon" aria-hidden="true" />
 
-            <span>{{ meta.text }}</span>
-          </span>
+                  <span>{{ meta.text }}</span>
+                </span>
               </div>
             </div>
 
             <div class="profile-stats">
-              <div
-                v-for="stat in profileStats"
-                :key="stat.label"
-                class="profile-stat"
-              >
-          <span class="stat-icon">
-            <Icon :icon="profileStatIcons[stat.type]" aria-hidden="true" />
-          </span>
+              <div v-for="stat in profileStats" :key="stat.label" class="profile-stat">
+                <span class="stat-icon">
+                  <Icon :icon="profileStatIcons[stat.type]" aria-hidden="true" />
+                </span>
 
                 <div class="stat-content">
                   <strong>{{ stat.value }}</strong>
@@ -424,23 +415,20 @@ onBeforeUnmount(() => {
               <span class="quote-mark">“</span>
               <p class="intro-quote-text">
                 保持热爱，奔赴山海；在代码的世界里，不断成长。
-                <span class="intro-quote-live">{{ displayedSignature }}</span><span
-                v-if="isSignatureTyping" class="typing-cursor"></span></p>
+                <span class="intro-quote-live">{{ displayedSignature }}</span
+                ><span v-if="isSignatureTyping" class="typing-cursor"></span>
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       <section ref="postsContainerRef" class="posts-container">
-        <div v-if="isPostLoading" class="post-list-state">
-          文章加载中...
-        </div>
+        <div v-if="isPostLoading" class="post-list-state">文章加载中...</div>
         <div v-else-if="postErrorMessage" class="post-list-state is-error">
           {{ postErrorMessage }}
         </div>
-        <div v-else-if="posts.length === 0" class="post-list-state">
-          暂无文章
-        </div>
+        <div v-else-if="posts.length === 0" class="post-list-state">暂无文章</div>
 
         <template v-else>
           <PostCard
@@ -459,7 +447,10 @@ onBeforeUnmount(() => {
       </section>
 
       <section
-        v-if="totalPages > 1 || (isMobilePostList && !isPostLoading && !postErrorMessage && posts.length > 0)"
+        v-if="
+          totalPages > 1 ||
+          (isMobilePostList && !isPostLoading && !postErrorMessage && posts.length > 0)
+        "
         class="pagination-section paging"
         aria-label="Post pagination"
       >
@@ -508,11 +499,8 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </section>
-    <BlogFooter/>
-    <BlogSideActions
-      v-if="showSideActions"
-      show-desktop-top
-    />
+    <BlogFooter />
+    <BlogSideActions v-if="showSideActions" show-desktop-top />
   </div>
 </template>
 
@@ -531,34 +519,31 @@ onBeforeUnmount(() => {
   --theme-accent: #0430f9;
   --theme-meta-stroke: rgba(15, 23, 42, 0.58);
   --theme-avatar-bg: rgba(226, 232, 240, 0.86);
-  --theme-avatar-shadow: 0 14px 34px rgba(15, 23, 42, 0.16),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+  --theme-avatar-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.85);
   --theme-online-dot: linear-gradient(135deg, #0430f9, #65368b);
   --theme-online-border: #ffffff;
   --theme-online-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
   --theme-stat-bg: rgba(248, 250, 252, 0.8);
-  --theme-stat-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.9),
-    0 10px 24px rgba(15, 23, 42, 0.06);
-  --theme-stat-hover-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.22),
-    0 14px 30px rgba(15, 23, 42, 0.1);
+  --theme-stat-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.9), 0 10px 24px rgba(15, 23, 42, 0.06);
+  --theme-stat-hover-shadow:
+    inset 0 0 0 1px rgba(99, 102, 241, 0.22), 0 14px 30px rgba(15, 23, 42, 0.1);
   --theme-stat-icon-color: #1d4ed8;
   --theme-stat-icon-bg: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.96),
     rgba(219, 234, 254, 0.86)
   );
-  --theme-stat-icon-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.82),
-    0 10px 22px rgba(37, 99, 235, 0.16);
+  --theme-stat-icon-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.82), 0 10px 22px rgba(37, 99, 235, 0.16);
   --theme-card-bg: rgba(255, 255, 255, 0.9);
-  --theme-card-shadow: 0 15px 35px rgba(50, 50, 93, 0.1),
-    0 5px 15px rgba(0, 0, 0, 0.07);
-  --theme-card-hover-shadow: 0 18px 38px rgba(50, 50, 93, 0.14),
-    0 8px 18px rgba(0, 0, 0, 0.09);
+  --theme-card-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+  --theme-card-hover-shadow: 0 18px 38px rgba(50, 50, 93, 0.14), 0 8px 18px rgba(0, 0, 0, 0.09);
   --theme-cover-tint: rgba(15, 23, 42, 0.2);
   --theme-divider: rgb(139 139 139 / 0.2);
-  --theme-chip-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
-  --theme-muted-chip-bg: linear-gradient(to right, #0000FF 0%, #4169E1 100%);
-  --theme-pagination-button-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+  --theme-chip-bg: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
+  --theme-muted-chip-bg: linear-gradient(to right, #0000ff 0%, #4169e1 100%);
+  --theme-pagination-button-bg: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
   --theme-pagination-button-shadow: 0 14px 28px rgba(1, 1, 254, 0.22);
   --theme-pagination-disabled-bg: rgba(203, 213, 225, 0.82);
   --theme-pagination-disabled-color: rgba(100, 116, 139, 0.72);
@@ -584,11 +569,7 @@ onBeforeUnmount(() => {
 
 .posts-page.is-night-theme {
   --theme-intro-bg-color: #020617;
-  --theme-intro-panel: linear-gradient(
-    135deg,
-    rgba(15, 23, 42, 0.82),
-    rgba(30, 41, 59, 0.58)
-  );
+  --theme-intro-panel: linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.58));
   --theme-text: rgba(248, 250, 252, 0.96);
   --theme-muted: rgba(203, 213, 225, 0.84);
   --theme-soft-text: rgba(226, 232, 240, 0.88);
@@ -596,34 +577,27 @@ onBeforeUnmount(() => {
   --theme-accent: #93c5fd;
   --theme-meta-stroke: rgba(226, 232, 240, 0.72);
   --theme-avatar-bg: rgba(15, 23, 42, 0.78);
-  --theme-avatar-shadow: 0 14px 34px rgba(0, 0, 0, 0.34),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  --theme-avatar-shadow: 0 14px 34px rgba(0, 0, 0, 0.34), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
   --theme-online-dot: linear-gradient(135deg, #38bdf8, #818cf8);
   --theme-online-border: rgba(15, 23, 42, 0.88);
   --theme-online-shadow: 0 4px 16px rgba(14, 165, 233, 0.28);
   --theme-stat-bg: rgba(15, 23, 42, 0.62);
-  --theme-stat-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 12px 28px rgba(0, 0, 0, 0.22);
-  --theme-stat-hover-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.28),
-    0 16px 34px rgba(0, 0, 0, 0.28);
+  --theme-stat-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 12px 28px rgba(0, 0, 0, 0.22);
+  --theme-stat-hover-shadow:
+    inset 0 0 0 1px rgba(147, 197, 253, 0.28), 0 16px 34px rgba(0, 0, 0, 0.28);
   --theme-stat-icon-color: #bfdbfe;
-  --theme-stat-icon-bg: linear-gradient(
-    135deg,
-    rgba(30, 41, 59, 0.96),
-    rgba(37, 99, 235, 0.34)
-  );
-  --theme-stat-icon-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-    0 10px 22px rgba(14, 165, 233, 0.14);
+  --theme-stat-icon-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(37, 99, 235, 0.34));
+  --theme-stat-icon-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 10px 22px rgba(14, 165, 233, 0.14);
   --theme-card-bg: rgba(15, 23, 42, 0.78);
-  --theme-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.24),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  --theme-card-hover-shadow: 0 22px 48px rgba(0, 0, 0, 0.3),
-    inset 0 0 0 1px rgba(147, 197, 253, 0.18);
+  --theme-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --theme-card-hover-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(147, 197, 253, 0.18);
   --theme-cover-tint: rgba(2, 6, 23, 0.32);
   --theme-divider: rgba(226, 232, 240, 0.16);
-  --theme-chip-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
-  --theme-muted-chip-bg: linear-gradient(to right, #0000FF 0%, #4169E1 100%);
-  --theme-pagination-button-bg: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+  --theme-chip-bg: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
+  --theme-muted-chip-bg: linear-gradient(to right, #0000ff 0%, #4169e1 100%);
+  --theme-pagination-button-bg: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
   --theme-pagination-button-shadow: 0 14px 30px rgba(14, 165, 233, 0.2);
   --theme-pagination-disabled-bg: rgba(15, 23, 42, 0.54);
   --theme-pagination-disabled-color: rgba(203, 213, 225, 0.42);
@@ -691,12 +665,17 @@ onBeforeUnmount(() => {
   background: var(--theme-pagination-button-bg);
   box-shadow: var(--theme-pagination-button-shadow);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .pagination-button:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: var(--theme-pagination-button-shadow), 0 10px 20px rgba(15, 23, 42, 0.12);
+  box-shadow:
+    var(--theme-pagination-button-shadow),
+    0 10px 20px rgba(15, 23, 42, 0.12);
 }
 
 .pagination-button:disabled {
@@ -894,8 +873,9 @@ onBeforeUnmount(() => {
   font-size: 54px;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 3px 10px rgba(15, 23, 42, 0.44),
-  0 8px 20px rgba(15, 23, 42, 0.2);
+  text-shadow:
+    0 3px 10px rgba(15, 23, 42, 0.44),
+    0 8px 20px rgba(15, 23, 42, 0.2);
 }
 
 .intro-quote-text {
@@ -911,8 +891,9 @@ onBeforeUnmount(() => {
   font-weight: 400;
   letter-spacing: 0;
   font-family: inherit;
-  text-shadow: 0 2px 8px rgba(15, 23, 42, 0.5),
-  0 6px 18px rgba(15, 23, 42, 0.34);
+  text-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.5),
+    0 6px 18px rgba(15, 23, 42, 0.34);
 }
 
 .typing-cursor {
@@ -1133,6 +1114,5 @@ onBeforeUnmount(() => {
     width: 34px;
     height: 34px;
   }
-
 }
 </style>

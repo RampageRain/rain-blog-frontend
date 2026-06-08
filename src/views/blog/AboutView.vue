@@ -59,13 +59,10 @@ const desktopCoverImages = [
   homeBg6,
   homeBg7,
   homeBg8,
-  homeBg9
+  homeBg9,
 ]
 
-const mobileCoverImages = [
-  loginBgMobile,
-  homeBgMobile1
-]
+const mobileCoverImages = [loginBgMobile, homeBgMobile1]
 
 const coverMobileMedia = '(max-width: 800px)'
 const desktopCoverStorageKey = 'rain_blog_about_cover_bg_index'
@@ -121,7 +118,10 @@ function persistCurrentCoverIndex() {
 
 const initialCoverImages = activeCoverImages.value
 const currentCoverIndex = ref(
-  getRandomCoverIndex(initialCoverImages, readLastCoverIndex(initialCoverImages, getCoverStorageKey()))
+  getRandomCoverIndex(
+    initialCoverImages,
+    readLastCoverIndex(initialCoverImages, getCoverStorageKey()),
+  ),
 )
 
 const currentCoverBackground = computed(() => {
@@ -140,7 +140,7 @@ const coverStyle = computed(() => {
         rgba(0, 0, 0, 0.4)
       ),
       url(${currentCoverBackground.value})
-    `
+    `,
   }
 })
 
@@ -164,12 +164,8 @@ function handleCoverMediaChange(event: MediaQueryListEvent) {
 
 const contentStyle = computed(() => {
   const currentBackground = isLightTheme.value ? postListBgLight : postListBgNight
-  const overlayStart = isLightTheme.value
-    ? 'rgba(255, 255, 255, 0.18)'
-    : 'rgba(0, 0, 0, 0.46)'
-  const overlayEnd = isLightTheme.value
-    ? 'rgba(255, 255, 255, 0.28)'
-    : 'rgba(0, 0, 0, 0.58)'
+  const overlayStart = isLightTheme.value ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.46)'
+  const overlayEnd = isLightTheme.value ? 'rgba(255, 255, 255, 0.28)' : 'rgba(0, 0, 0, 0.58)'
 
   return {
     backgroundImage: `
@@ -178,7 +174,7 @@ const contentStyle = computed(() => {
         ${overlayEnd}
       ),
       url(${currentBackground})
-    `
+    `,
   }
 })
 
@@ -186,7 +182,7 @@ const postStats = [
   { name: '文章', count: '12' },
   { name: '分类', count: '6' },
   { name: '标签', count: '18' },
-  { name: '访问', count: '8.6k' }
+  { name: '访问', count: '8.6k' },
 ]
 
 const publishStats = [
@@ -195,7 +191,7 @@ const publishStats = [
   ['3月', 5],
   ['4月', 4],
   ['5月', 8],
-  ['6月', 6]
+  ['6月', 6],
 ]
 
 const categoryStats = [
@@ -203,7 +199,7 @@ const categoryStats = [
   { name: '前端开发', value: 28 },
   { name: '数据库', value: 18 },
   { name: '部署运维', value: 12 },
-  { name: '生活随笔', value: 8 }
+  { name: '生活随笔', value: 8 },
 ]
 
 const topPosts = [
@@ -216,7 +212,7 @@ const topPosts = [
   { name: 'OOM排查', views: 690 },
   { name: 'REST API', views: 610 },
   { name: 'Git工作流', views: 540 },
-  { name: 'CSS Grid', views: 480 }
+  { name: 'CSS Grid', views: 480 },
 ]
 
 function handleAvatarClick() {
@@ -292,12 +288,12 @@ function initCharts(echarts: EChartsGlobal) {
         boundaryGap: false,
         data: publishStats.map((item) => item[0]),
         axisLine: { lineStyle: { color: chartAxisColor } },
-        axisLabel: { color: chartTextColor }
+        axisLabel: { color: chartTextColor },
       },
       yAxis: {
         type: 'value',
         splitLine: { lineStyle: { color: chartSplitColor } },
-        axisLabel: { color: chartTextColor }
+        axisLabel: { color: chartTextColor },
       },
       series: [
         {
@@ -307,9 +303,9 @@ function initCharts(echarts: EChartsGlobal) {
           symbolSize: 8,
           lineStyle: { width: 3 },
           areaStyle: { color: 'rgba(65, 105, 225, 0.14)' },
-          data: publishStats.map((item) => item[1])
-        }
-      ]
+          data: publishStats.map((item) => item[1]),
+        },
+      ],
     })
     chartInstances.push(chart)
   }
@@ -328,15 +324,15 @@ function initCharts(echarts: EChartsGlobal) {
           label: {
             formatter: '{b}',
             color: chartTitleColor,
-            fontSize: 12
+            fontSize: 12,
           },
           labelLine: {
             length: 12,
-            length2: 8
+            length2: 8,
           },
-          data: categoryStats
-        }
-      ]
+          data: categoryStats,
+        },
+      ],
     })
     chartInstances.push(chart)
   }
@@ -355,24 +351,24 @@ function initCharts(echarts: EChartsGlobal) {
           color: chartTextColor,
           interval: 0,
           rotate: 42,
-          fontSize: 10
-        }
+          fontSize: 10,
+        },
       },
       yAxis: {
         type: 'value',
         name: '阅读量',
         nameTextStyle: { color: chartTextColor },
         splitLine: { lineStyle: { color: chartSplitColor } },
-        axisLabel: { color: chartTextColor }
+        axisLabel: { color: chartTextColor },
       },
       series: [
         {
           name: '阅读量',
           type: 'bar',
           barMaxWidth: 18,
-          data: topPosts.map((post) => post.views)
-        }
-      ]
+          data: topPosts.map((post) => post.views),
+        },
+      ],
     })
     chartInstances.push(chart)
   }
@@ -416,7 +412,7 @@ onBeforeUnmount(() => {
     class="about-page"
     :class="{
       'is-light-theme': isLightTheme,
-      'is-night-theme': !isLightTheme
+      'is-night-theme': !isLightTheme,
     }"
   >
     <BlogNavbar />
@@ -427,65 +423,71 @@ onBeforeUnmount(() => {
       <section id="aboutme" class="about-container card">
         <article class="profile-card">
           <div class="profile">
-            <button type="button" class="avatar-button" aria-label="Rain avatar" @click="handleAvatarClick">
+            <button
+              type="button"
+              class="avatar-button"
+              aria-label="Rain avatar"
+              @click="handleAvatarClick"
+            >
               <img class="avatar-img" :src="avatar" alt="Rain" />
             </button>
 
-          <div class="author">
-            <h2 class="title">Rain</h2>
-            <p class="career">全栈开发者 / 技术记录者 / 持续创作者</p>
+            <div class="author">
+              <h2 class="title">Rain</h2>
+              <p class="career">全栈开发者 / 技术记录者 / 持续创作者</p>
 
-            <div class="post-statis">
-              <span v-for="stat in postStats" :key="stat.name" class="statis">
-                <strong class="count">{{ stat.count }}</strong>
-                <span class="name">{{ stat.name }}</span>
-              </span>
+              <div class="post-statis">
+                <span v-for="stat in postStats" :key="stat.name" class="statis">
+                  <strong class="count">{{ stat.count }}</strong>
+                  <span class="name">{{ stat.name }}</span>
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="social-link">
-          <a
-            href="https://github.com/RampageRain"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub"
-          >
-            <Icon icon="fa-brands:github" aria-hidden="true" />
-          </a>
-          <a href="mailto:18687419361@163.com" aria-label="Email">
-            <Icon icon="fa-solid:envelope-open" aria-hidden="true" />
-          </a>
-          <a href="/atom.xml" target="_blank" rel="noopener noreferrer" aria-label="RSS">
-            <Icon icon="fa-solid:rss" aria-hidden="true" />
-          </a>
-        </div>
+          <div class="social-link">
+            <a
+              href="https://github.com/RampageRain"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+            >
+              <Icon icon="fa-brands:github" aria-hidden="true" />
+            </a>
+            <a href="mailto:18687419361@163.com" aria-label="Email">
+              <Icon icon="fa-solid:envelope-open" aria-hidden="true" />
+            </a>
+            <a href="/atom.xml" target="_blank" rel="noopener noreferrer" aria-label="RSS">
+              <Icon icon="fa-solid:rss" aria-hidden="true" />
+            </a>
+          </div>
 
-        <p class="introduction">
-          这里是 Rain Blog。这个博客用于沉淀技术实践、项目复盘和日常学习笔记。希望内容能保持清晰、真实、可复用，也让写作本身成为整理思路的一部分。
-        </p>
-      </article>
+          <p class="introduction">
+            这里是 Rain
+            Blog。这个博客用于沉淀技术实践、项目复盘和日常学习笔记。希望内容能保持清晰、真实、可复用，也让写作本身成为整理思路的一部分。
+          </p>
+        </article>
 
-      <section class="post-charts">
-        <h2 class="title">文章统计图</h2>
+        <section class="post-charts">
+          <h2 class="title">文章统计图</h2>
 
-        <div class="chart-grid">
-          <article class="chart-card">
-            <h3>文章发布统计图</h3>
-            <div ref="publishChartRef" class="echart-box"></div>
-          </article>
+          <div class="chart-grid">
+            <article class="chart-card">
+              <h3>文章发布统计图</h3>
+              <div ref="publishChartRef" class="echart-box"></div>
+            </article>
 
-          <article class="chart-card">
-            <h3>文章分类统计图</h3>
-            <div ref="categoryChartRef" class="echart-box"></div>
-          </article>
+            <article class="chart-card">
+              <h3>文章分类统计图</h3>
+              <div ref="categoryChartRef" class="echart-box"></div>
+            </article>
 
-          <article class="chart-card">
-            <h3>TOP10 文章阅读量</h3>
-            <div ref="topPostChartRef" class="echart-box"></div>
-          </article>
-        </div>
-      </section>
+            <article class="chart-card">
+              <h3>TOP10 文章阅读量</h3>
+              <div ref="topPostChartRef" class="echart-box"></div>
+            </article>
+          </div>
+        </section>
       </section>
 
       <BlogFooter />
@@ -654,7 +656,9 @@ onBeforeUnmount(() => {
   justify-content: center;
   color: #ffffff;
   background: radial-gradient(#0000ff, #4169e1);
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.21), 0 2px 3px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 4px 6px rgba(50, 50, 93, 0.21),
+    0 2px 3px rgba(0, 0, 0, 0.1);
 }
 
 #aboutme .introduction {

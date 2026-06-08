@@ -54,6 +54,6 @@ export function useBlogTheme() {
     isLightTheme,
     setTheme,
     toggleTheme,
-    resetThemeToSystem
+    resetThemeToSystem,
   }
 }

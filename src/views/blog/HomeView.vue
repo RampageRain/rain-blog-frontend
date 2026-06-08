@@ -31,13 +31,10 @@ const desktopBackgroundImages = [
   homeBg6,
   homeBg7,
   homeBg8,
-  homeBg9
+  homeBg9,
 ]
 
-const mobileBackgroundImages = [
-  loginBgMobile,
-  homeBgMobile1
-]
+const mobileBackgroundImages = [loginBgMobile, homeBgMobile1]
 
 const desktopBackgroundStorageKey = 'rain_blog_home_bg_index'
 const mobileBackgroundStorageKey = 'rain_blog_home_mobile_bg_index'
@@ -94,7 +91,7 @@ function persistCurrentBackgroundIndex() {
 
 const initialImages = activeBackgroundImages.value
 const currentIndex = ref(
-  getRandomIndex(initialImages, readLastIndex(initialImages, getBackgroundStorageKey()))
+  getRandomIndex(initialImages, readLastIndex(initialImages, getBackgroundStorageKey())),
 )
 
 const currentBackground = computed(() => {
@@ -113,7 +110,7 @@ const heroStyle = computed(() => {
         rgba(0, 0, 0, 0.4)
       ),
       url(${currentBackground.value})
-    `
+    `,
   }
 })
 
@@ -150,7 +147,7 @@ async function scrollToPosts(behavior: ScrollBehavior | Event = 'smooth') {
 
   window.scrollTo({
     top: targetTop,
-    behavior: scrollBehavior
+    behavior: scrollBehavior,
   })
 }
 
@@ -232,7 +229,7 @@ watch(
     if (hash === '#home-posts') {
       void scrollToPosts()
     }
-  }
+  },
 )
 
 onBeforeUnmount(() => {
@@ -245,14 +242,14 @@ const contactPopupVisible = ref(false)
 const contactPopup = ref({
   title: '',
   account: '',
-  qrCode: ''
+  qrCode: '',
 })
 
 function openWechatPopup() {
   contactPopup.value = {
     title: '微信联系',
     account: 'Rain119813',
-    qrCode: wechatQrCode
+    qrCode: wechatQrCode,
   }
 
   contactPopupVisible.value = true
@@ -262,7 +259,7 @@ function openQQPopup() {
   contactPopup.value = {
     title: 'QQ 联系',
     account: '1192924906',
-    qrCode: qqQrCode
+    qrCode: qqQrCode,
   }
 
   contactPopupVisible.value = true
@@ -287,12 +284,20 @@ function closeContactPopup() {
 
         <div class="hero-actions">
           <button type="button" class="hero-button primary" @click="scrollToPosts">
-            <Icon class="hero-button-icon down-icon" icon="fa-solid:angle-double-down" aria-hidden="true" />
+            <Icon
+              class="hero-button-icon down-icon"
+              icon="fa-solid:angle-double-down"
+              aria-hidden="true"
+            />
             <span>开始阅读</span>
           </button>
 
           <RouterLink to="/repositories" class="hero-button ghost">
-            <Icon class="hero-button-icon fork-icon" icon="fa-solid:code-branch" aria-hidden="true" />
+            <Icon
+              class="hero-button-icon fork-icon"
+              icon="fa-solid:code-branch"
+              aria-hidden="true"
+            />
             <span>获取源码</span>
           </RouterLink>
         </div>
@@ -351,7 +356,12 @@ function closeContactPopup() {
         </div>
       </div>
 
-      <button type="button" class="hero-scroll-down" aria-label="查看最新文章" @click="scrollToPosts">
+      <button
+        type="button"
+        class="hero-scroll-down"
+        aria-label="查看最新文章"
+        @click="scrollToPosts"
+      >
         <Icon icon="fa-solid:angle-double-down" aria-hidden="true" />
       </button>
     </section>

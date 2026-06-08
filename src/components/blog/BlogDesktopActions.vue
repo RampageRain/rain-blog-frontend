@@ -13,8 +13,8 @@ withDefaults(
   {
     showToc: false,
     tocActive: false,
-    showTop: true
-  }
+    showTop: true,
+  },
 )
 
 const emit = defineEmits<{
@@ -29,7 +29,8 @@ const { isLightTheme, toggleTheme } = useBlogTheme()
     class="blog-desktop-actions"
     :class="{
       'is-night-theme': !isLightTheme,
-      'has-toc': showToc
+      'has-toc': showToc,
+      'no-top': !showTop,
     }"
   >
     <button
@@ -85,7 +86,10 @@ const { isLightTheme, toggleTheme } = useBlogTheme()
   justify-content: center;
 
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .blog-desktop-theme-button {
@@ -104,11 +108,15 @@ const { isLightTheme, toggleTheme } = useBlogTheme()
   bottom: 137px;
 }
 
+.blog-desktop-actions.no-top:not(.has-toc) .blog-desktop-theme-button {
+  bottom: 15px;
+}
+
 .blog-desktop-toc-button {
   bottom: 76px;
   border: none;
   color: #ffffff;
-  background: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+  background: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
   box-shadow: 0 12px 26px rgba(1, 1, 254, 0.24);
 }
 

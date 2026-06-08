@@ -1,8 +1,9 @@
 :root {
   /* 正文/全局字体：与 Matery 完全一致，取自其内置 Materialize 1.2.1 的 html 字体栈。
      系统字体优先（Windows→Segoe UI，Mac→苹方/SF，Android/Linux→Roboto），随系统优雅降级，无需安装字体。 */
-  --blog-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu,
-    Cantarell, 'Helvetica Neue', sans-serif;
+  --blog-font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell,
+    'Helvetica Neue', sans-serif;
 
   /* 行内代码 / 代码块字体：取自 Matery matery.css 的 code 字体栈 */
   --blog-mono-font-family: Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace;

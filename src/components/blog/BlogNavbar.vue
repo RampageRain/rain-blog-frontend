@@ -20,7 +20,7 @@ const mobileProfileCoverFitMode = ref<ImageFitMode>('fill-width')
 const mobileProfileCrop = {
   x: '50%',
   y: '50%',
-  scale: 1
+  scale: 1,
 }
 
 const publicMenus = [
@@ -28,13 +28,13 @@ const publicMenus = [
   { label: '标签', path: '/tags', icon: 'fa-solid:tags' },
   { label: '分类', path: '/categories', icon: 'fa-solid:bookmark' },
   { label: '归档', path: '/archives', icon: 'fa-solid:archive' },
-  { label: '关于', path: '/about', icon: 'fa-solid:user-circle' }
+  { label: '关于', path: '/about', icon: 'fa-solid:user-circle' },
 ]
 
 const studioMenus = [
   { label: '创建文章', hash: '#create', icon: 'fa-solid:pen-nib' },
   { label: '编辑文章', hash: '#edit', icon: 'fa-solid:edit' },
-  { label: '删除文章', hash: '#delete', icon: 'fa-solid:trash-alt' }
+  { label: '删除文章', hash: '#delete', icon: 'fa-solid:trash-alt' },
 ]
 
 function resolveImageFitMode(imageRatio: number, containerRatio: number): ImageFitMode {
@@ -63,7 +63,9 @@ function loadImageRatio(imageUrl: string) {
   return new Promise<number>((resolve) => {
     const image = new Image()
     image.onload = () => {
-      resolve(image.naturalWidth && image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1)
+      resolve(
+        image.naturalWidth && image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1,
+      )
     }
     image.onerror = () => resolve(1)
     image.src = imageUrl
@@ -90,9 +92,11 @@ const mobileProfileCoverStyle = computed(() => {
   return {
     top: mobileProfileCrop.y,
     left: mobileProfileCrop.x,
-    transform: `translate(-50%, -50%) scale(${mobileProfileCrop.scale})`
+    transform: `translate(-50%, -50%) scale(${mobileProfileCrop.scale})`,
   }
 })
+
+const isStudioRoute = computed(() => route.path.startsWith('/studio'))
 
 function handleWindowResize() {
   if (mobileMenuOpen.value) {
@@ -163,11 +167,7 @@ onUnmounted(() => {
 <template>
   <header class="blog-navbar">
     <RouterLink class="brand" to="/" @click="handleBrandClick">
-      <img
-        class="brand-logo"
-        :src="catStarLogo"
-        alt="Rain Blog Logo"
-      />
+      <img class="brand-logo" :src="catStarLogo" alt="Rain Blog Logo" />
       <span>Rain Blog</span>
     </RouterLink>
 
@@ -194,7 +194,7 @@ onUnmounted(() => {
         v-if="authStore.isLogin"
         :to="{ path: '/studio/dashboard', hash: '#create' }"
         class="nav-item"
-        :class="{ 'nav-active': isCurrentPath('/studio/dashboard') }"
+        :class="{ 'nav-active': isStudioRoute }"
         active-class=""
         exact-active-class=""
       >
@@ -203,12 +203,7 @@ onUnmounted(() => {
       </RouterLink>
     </nav>
 
-    <button
-      type="button"
-      class="mobile-search-button"
-      aria-label="搜索"
-      @click="handleSearchClick"
-    >
+    <button type="button" class="mobile-search-button" aria-label="搜索" @click="handleSearchClick">
       <Icon icon="fa-solid:search" aria-hidden="true" />
     </button>
 
@@ -223,11 +218,7 @@ onUnmounted(() => {
 
     <Teleport to="body">
       <Transition name="mobile-drawer">
-        <div
-          v-if="mobileMenuOpen"
-          class="mobile-drawer-mask"
-          @click="closeMobileMenu"
-        >
+        <div v-if="mobileMenuOpen" class="mobile-drawer-mask" @click="closeMobileMenu">
           <aside class="mobile-drawer" @click.stop>
             <div class="mobile-profile">
               <img
@@ -242,9 +233,7 @@ onUnmounted(() => {
 
               <h2>Rain Blog</h2>
 
-              <p>
-                记录 Java 后端、Vue 前端与全栈成长
-              </p>
+              <p>记录 Java 后端、Vue 前端与全栈成长</p>
             </div>
 
             <nav class="mobile-menu-list">
@@ -264,7 +253,7 @@ onUnmounted(() => {
                 v-if="authStore.isLogin"
                 :to="{ path: '/studio/dashboard', hash: '#create' }"
                 class="mobile-menu-item"
-                :class="{ 'mobile-active': isCurrentPath('/studio/dashboard') }"
+                :class="{ 'mobile-active': isStudioRoute }"
                 @click="closeMobileMenu"
               >
                 <Icon class="mobile-menu-icon" icon="fa-solid:edit" aria-hidden="true" />
@@ -294,7 +283,6 @@ onUnmounted(() => {
 
   color: #ffffff;
   background: rgba(15, 23, 42, 0.24);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.32);
   box-shadow: 0 1px 12px rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(16px);
 }
@@ -373,7 +361,7 @@ onUnmounted(() => {
 }
 
 .nav-menu:hover .nav-active {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .nav-menu:hover .nav-item:hover {

@@ -1,5 +1,5 @@
-import {computed, ref} from 'vue'
-import {defineStore} from 'pinia'
+import { computed, ref } from 'vue'
+import { defineStore } from 'pinia'
 
 export interface AdminInfo {
   username: string
@@ -47,6 +47,6 @@ export const useAuthStore = defineStore('auth', () => {
     admin,
     isLogin,
     setLogin,
-    loadFromStorage
+    loadFromStorage,
   }
 })

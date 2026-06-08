@@ -13,8 +13,8 @@ withDefaults(
     showToc: false,
     tocActive: false,
     showDesktopTop: true,
-    showJumpToPosts: false
-  }
+    showJumpToPosts: false,
+  },
 )
 
 const emit = defineEmits<{

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, watch} from 'vue'
+import { ref, watch } from 'vue'
 
 import { useBlogTheme } from '@/composables/useBlogTheme'
 
@@ -39,7 +39,7 @@ watch(
     if (!visible) {
       previewVisible.value = false
     }
-  }
+  },
 )
 </script>
 
@@ -53,13 +53,7 @@ watch(
         @click="handleMaskClick"
       >
         <div class="contact-popup-card" :class="{ 'is-night-theme': !isLightTheme }">
-          <button
-            type="button"
-            class="contact-popup-close"
-            @click="emit('close')"
-          >
-            ×
-          </button>
+          <button type="button" class="contact-popup-close" @click="emit('close')">×</button>
 
           <div class="contact-popup-header">
             <h3>{{ title }}</h3>
@@ -67,16 +61,8 @@ watch(
           </div>
 
           <div class="contact-popup-qrcode-wrapper">
-            <button
-              type="button"
-              class="contact-popup-qrcode-button"
-              @click="openPreview"
-            >
-              <img
-                class="contact-popup-qrcode"
-                :src="qrCode"
-                :alt="title"
-              />
+            <button type="button" class="contact-popup-qrcode-button" @click="openPreview">
+              <img class="contact-popup-qrcode" :src="qrCode" :alt="title" />
             </button>
           </div>
 
@@ -91,20 +77,9 @@ watch(
             :class="{ 'is-night-theme': !isLightTheme }"
             @click="closePreview"
           >
-            <button
-              type="button"
-              class="qr-preview-close"
-              @click.stop="closePreview"
-            >
-              ×
-            </button>
+            <button type="button" class="qr-preview-close" @click.stop="closePreview">×</button>
 
-            <img
-              class="qr-preview-image"
-              :src="qrCode"
-              :alt="title"
-              @click.stop
-            />
+            <img class="qr-preview-image" :src="qrCode" :alt="title" @click.stop />
           </div>
         </Transition>
       </div>
@@ -144,8 +119,9 @@ watch(
 
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.68);
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22),
-  inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
 
   backdrop-filter: blur(20px);
 }
@@ -153,7 +129,8 @@ watch(
 .contact-popup-card.is-night-theme {
   background: rgba(15, 23, 42, 0.92);
   border-color: rgba(148, 163, 184, 0.22);
-  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.56),
+  box-shadow:
+    0 24px 60px rgba(2, 6, 23, 0.56),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -179,8 +156,9 @@ watch(
 
   background: rgba(226, 232, 240, 0.72);
 
-  transition: transform 0.18s ease,
-  background 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 
 .contact-popup-card.is-night-theme .contact-popup-close {
@@ -229,8 +207,9 @@ watch(
   padding: 12px;
 
   background: rgba(248, 250, 252, 0.92);
-  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.82),
-  0 10px 24px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 232, 240, 0.82),
+    0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .contact-popup-qrcode {
@@ -253,14 +232,15 @@ watch(
   font-weight: 600;
   letter-spacing: 0.2px;
 
-  background-image: linear-gradient(to right, #0000CD 0%, #0f9d58 100%);
+  background-image: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
   box-shadow: 0 10px 24px rgba(1, 1, 254, 0.18);
 }
 
 .contact-popup-enter-active,
 .contact-popup-leave-active {
-  transition: opacity 0.22s ease,
-  transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 
 .contact-popup-enter-from,
@@ -345,8 +325,9 @@ watch(
   background: rgba(15, 23, 42, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.18);
 
-  transition: background 0.18s ease,
-  transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 
 .qr-preview-close:hover {

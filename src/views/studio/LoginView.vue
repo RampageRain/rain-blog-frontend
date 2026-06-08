@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {computed, ref, watch} from "vue";
-import {login} from "@/api/auth";
-import {useRouter} from "vue-router";
-import {useAuthStore} from "@/stores/auth";
+import { computed, ref, watch } from 'vue'
+import { login } from '@/api/auth'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const username = ref('')
 const password = ref('')
@@ -34,7 +34,7 @@ async function handleLogin() {
   try {
     const res = await login({
       username: username.value.trim(),
-      password: password.value.trim()
+      password: password.value.trim(),
     })
 
     if (res.data.code !== 200) {
@@ -45,7 +45,7 @@ async function handleLogin() {
     authStore.setLogin(loginData.token, {
       username: loginData.username,
       nickname: loginData.nickname,
-      avatar: loginData.avatar
+      avatar: loginData.avatar,
     })
     await router.push('/studio/dashboard')
   } catch {
@@ -67,11 +67,11 @@ async function handleLogin() {
       <form class="login-form" @submit.prevent="handleLogin">
         <label class="form-item">
           <span>用户名</span>
-          <input v-model="username" type="text" placeholder="请输入用户名"/>
+          <input v-model="username" type="text" placeholder="请输入用户名" />
         </label>
         <label class="form-item">
           <span>密码</span>
-          <input v-model="password" type="password" placeholder="请输入密码"/>
+          <input v-model="password" type="password" placeholder="请输入密码" />
         </label>
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         <button class="login-button" type="submit" :disabled="!canLogin || loading">
@@ -92,7 +92,7 @@ async function handleLogin() {
   align-items: center;
   padding: 24px;
 
-  background-image: url("@/assets/images/login-bg.jpg");
+  background-image: url('@/assets/images/login-bg.jpg');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -181,10 +181,11 @@ async function handleLogin() {
   background: rgba(15, 23, 42, 0.8);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
 
-  transition: background 0.2s,
-  border-color 0.2s,
-  transform 0.2s,
-  box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .login-button:disabled {
@@ -213,7 +214,7 @@ async function handleLogin() {
 
 @media (max-width: 800px) {
   .login-page {
-    background-image: url("@/assets/images/login-bg-mobile.jpg");
+    background-image: url('@/assets/images/login-bg-mobile.jpg');
     background-size: cover;
     background-position: center center;
     padding: 20px;

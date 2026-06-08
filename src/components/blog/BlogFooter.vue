@@ -1,9 +1,7 @@
 <template>
   <footer class="blog-footer">
     <div class="footer-content">
-      <p class="footer-copyright">
-        © 2026 Rain Blog. All Rights Reserved.
-      </p>
+      <p class="footer-copyright">© 2026 Rain Blog. All Rights Reserved.</p>
 
       <p class="footer-meta">
         <span>Powered by Vue</span>

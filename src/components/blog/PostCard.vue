@@ -21,8 +21,8 @@ const props = withDefaults(
     index?: number
   }>(),
   {
-    index: 0
-  }
+    index: 0,
+  },
 )
 
 const imageLoading = computed(() => (props.index < 2 ? 'eager' : 'lazy'))

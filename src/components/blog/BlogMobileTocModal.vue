@@ -47,10 +47,7 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <Transition name="mobile-toc-modal">
-      <div
-        v-if="isModalVisible"
-        class="mobile-toc-modal-mask"
-      >
+      <div v-if="isModalVisible" class="mobile-toc-modal-mask">
         <section class="mobile-toc-modal-card" aria-label="文章目录" @click.stop>
           <header class="mobile-toc-modal-title">
             <Icon icon="fa-regular:list-alt" aria-hidden="true" />
@@ -65,7 +62,7 @@ onBeforeUnmount(() => {
               :class="[
                 'mobile-toc-modal-link',
                 `is-level-${item.level}`,
-                { 'is-active': activeId === item.id }
+                { 'is-active': activeId === item.id },
               ]"
               @click="handleSelect(item.id)"
             >
@@ -90,7 +87,6 @@ onBeforeUnmount(() => {
   padding: 18px;
 
   pointer-events: none;
-
 }
 
 .mobile-toc-modal-card {
@@ -196,7 +192,9 @@ onBeforeUnmount(() => {
 
 .mobile-toc-modal-enter-active .mobile-toc-modal-card,
 .mobile-toc-modal-leave-active .mobile-toc-modal-card {
-  transition: transform 0.22s ease, opacity 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    opacity 0.22s ease;
 }
 
 .mobile-toc-modal-enter-from .mobile-toc-modal-card,
