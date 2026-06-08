@@ -272,7 +272,7 @@ onUnmounted(() => {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 50;
+  z-index: 1000;
 
   width: 100%;
   height: 64px;
@@ -284,7 +284,10 @@ onUnmounted(() => {
   color: #ffffff;
   background: rgba(15, 23, 42, 0.24);
   box-shadow: 0 1px 12px rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .brand {

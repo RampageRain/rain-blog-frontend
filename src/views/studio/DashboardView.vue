@@ -610,22 +610,11 @@ const goToPage = (page: number) => {
   color: var(--studio-body);
   background-position: center top;
   background-size: cover;
-  background-attachment: fixed;
+  background-attachment: scroll;
 }
 
 .studio-page::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 49;
-  width: 100%;
-  height: 64px;
-  pointer-events: none;
-  background: inherit;
-  background-position: center top;
-  background-size: cover;
-  background-attachment: fixed;
+  display: none;
 }
 
 .studio-page.is-night-theme {
@@ -656,12 +645,12 @@ const goToPage = (page: number) => {
 }
 
 .workspace-head,
-.post-row,
 .profile-card,
 .side-card {
   border-radius: 8px;
   background: var(--studio-card-bg);
   box-shadow: var(--studio-card-shadow);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   transition:
     box-shadow 0.3s ease,
@@ -786,6 +775,10 @@ const goToPage = (page: number) => {
   display: flex;
   align-items: stretch;
   overflow: hidden;
+  border-radius: 8px;
+  background: var(--studio-card-bg);
+  box-shadow: var(--studio-card-shadow);
+  transition: box-shadow 0.3s ease;
 }
 
 .post-actions {
@@ -911,7 +904,7 @@ const goToPage = (page: number) => {
   height: 100%;
 }
 
-.post-row:hover .post-cover-image {
+.post-cover:hover .post-cover-image {
   transform: translate(-50%, -50%) scale(1.06);
 }
 
