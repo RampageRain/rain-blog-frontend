@@ -52,7 +52,8 @@ function updateCoverFit(event: Event) {
 
 <template>
   <article class="post-card">
-    <RouterLink class="post-card-link" :to="`/posts/${post.id}`">
+    <div class="post-card-surface">
+      <RouterLink class="post-card-link" :to="`/posts/${post.id}`">
       <div ref="coverRef" class="post-cover">
         <img
           class="post-cover-image"
@@ -100,23 +101,42 @@ function updateCoverFit(event: Event) {
           </div>
         </div>
       </div>
-    </RouterLink>
+      </RouterLink>
+    </div>
   </article>
 </template>
 
 <style scoped>
 .post-card {
+  position: relative;
   overflow: hidden;
   height: 100%;
   min-height: var(--post-card-min-height);
   display: flex;
+  contain: paint;
+}
+
+.post-card-surface {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: var(--post-card-min-height);
+  display: flex;
+  flex: 1;
   flex-direction: column;
 
   background: var(--theme-card-bg);
   border-radius: 8px;
-  box-shadow: var(--theme-card-shadow);
+  box-shadow: none;
   backdrop-filter: blur(10px);
-  transition: background 0.28s ease;
+  transition:
+    background 0.28s ease,
+    transform 0.24s ease;
+  isolation: isolate;
+}
+
+.post-card:hover .post-card-surface {
+  transform: translateY(-3px);
 }
 
 .post-card-link {
@@ -152,6 +172,10 @@ function updateCoverFit(event: Event) {
   transform: translate(-50%, -50%) scale(1);
   transform-origin: center;
   transition: transform 0.3s ease;
+}
+
+.post-card:hover .post-cover-image {
+  transform: translate(-50%, -50%) scale(1.035);
 }
 
 .post-cover-image.is-fill-width {

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
@@ -6,6 +6,7 @@ import { Icon } from '@iconify/vue'
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import BlogFooter from '@/components/blog/BlogFooter.vue'
 import BlogSideActions from '@/components/blog/BlogSideActions.vue'
+import StudioPostCard from '@/components/studio/StudioPostCard.vue'
 import { useBlogTheme } from '@/composables/useBlogTheme'
 
 import avatar from '@/assets/images/avart.jpg'
@@ -206,7 +207,6 @@ const paginatedPosts = computed(() => {
   const start = (currentPage.value - 1) * pageSize
   return posts.value.slice(start, start + pageSize)
 })
-const coverFitModes = ref<Record<number, ImageFitMode>>({})
 const recentCoverFitModes = ref<Record<number, ImageFitMode>>({})
 
 const categoryStats = computed(() => {
@@ -241,11 +241,6 @@ const archiveStats = computed(() => {
     .map(([month, count]) => ({ month, count }))
 })
 
-const statusLabel: Record<PostStatus, string> = {
-  published: '已发布',
-  draft: '草稿',
-}
-
 const logout = () => {
   localStorage.removeItem('rain_blog_token')
   localStorage.removeItem('rain_blog_admin')
@@ -264,15 +259,6 @@ const resolveImageFitMode = (
   const imageRatio = image.naturalWidth / image.naturalHeight
 
   return imageRatio >= coverRatio ? 'fill-height' : 'fill-width'
-}
-
-const updatePostCoverFit = (post: PostItem, event: Event) => {
-  const image = event.target
-  if (!(image instanceof HTMLImageElement) || !image.naturalWidth || !image.naturalHeight) {
-    return
-  }
-
-  coverFitModes.value[post.id] = resolveImageFitMode(image, image.parentElement, 44 / 26)
 }
 
 const updateRecentCoverFit = (post: PostItem, event: Event) => {
@@ -487,80 +473,16 @@ const goToPage = (page: number) => {
         </header>
 
         <section class="post-list" aria-label="文章列表">
-          <article v-for="(post, index) in paginatedPosts" :key="post.id" class="post-row">
-            <div class="post-cover-panel" :class="{ right: index % 2 === 1 }">
-              <RouterLink class="post-cover" :to="`/posts/${post.id}`" :title="post.title">
-                <img
-                  class="post-cover-image"
-                  :class="`is-${coverFitModes[post.id] ?? 'fill-width'}`"
-                  :src="post.cover"
-                  :alt="post.title"
-                  @load="updatePostCoverFit(post, $event)"
-                />
-              </RouterLink>
+          <StudioPostCard
+            v-for="(post, index) in paginatedPosts"
+            :key="post.id"
+            :post="post"
+            :reversed="index % 2 === 1"
+            @preview="previewPost"
+            @edit="editPost"
+            @delete="deletePost"
+          />
 
-              <div class="post-actions" aria-label="文章操作">
-                <button
-                  type="button"
-                  class="preview"
-                  title="预览"
-                  aria-label="预览文章"
-                  @click="previewPost(post)"
-                >
-                  <Icon icon="fa-regular:eye" aria-hidden="true" />
-                  <span>预览</span>
-                </button>
-                <button
-                  type="button"
-                  class="edit"
-                  title="编辑"
-                  aria-label="编辑文章"
-                  @click="editPost(post)"
-                >
-                  <Icon icon="fa-solid:pen" aria-hidden="true" />
-                  <span>编辑</span>
-                </button>
-                <button
-                  type="button"
-                  class="danger"
-                  title="删除"
-                  aria-label="删除文章"
-                  @click="deletePost(post)"
-                >
-                  <Icon icon="fa-regular:trash-alt" aria-hidden="true" />
-                  <span>删除</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="post-info">
-              <RouterLink class="article-title" :to="`/posts/${post.id}`">
-                {{ post.title }}
-              </RouterLink>
-
-              <div class="article-meta">
-                <span :class="['status-pill', post.status]">{{ statusLabel[post.status] }}</span>
-                <span>
-                  <Icon icon="fa-regular:calendar-alt" aria-hidden="true" />
-                  {{ post.date }}
-                </span>
-                <span>
-                  <Icon icon="fa-solid:folder-open" aria-hidden="true" />
-                  {{ post.category }}
-                </span>
-                <span>
-                  <Icon icon="fa-regular:eye" aria-hidden="true" />
-                  {{ post.views.toLocaleString() }}
-                </span>
-              </div>
-
-              <p>{{ post.summary }}</p>
-
-              <div class="tag-row">
-                <span v-for="tag in post.tags" :key="tag">{{ tag }}</span>
-              </div>
-            </div>
-          </article>
         </section>
 
         <nav class="studio-pagination" aria-label="文章分页">
@@ -771,105 +693,6 @@ const goToPage = (page: number) => {
   gap: 16px;
 }
 
-.post-row {
-  display: flex;
-  align-items: stretch;
-  overflow: hidden;
-  border-radius: 8px;
-  background: var(--studio-card-bg);
-  box-shadow: var(--studio-card-shadow);
-  transition: box-shadow 0.3s ease;
-}
-
-.post-actions {
-  position: absolute;
-  bottom: 16px;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.post-cover-panel:not(.right) .post-actions {
-  left: 16px;
-}
-
-.post-cover-panel.right .post-actions {
-  right: 16px;
-}
-
-.post-actions button {
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  background: rgba(15, 23, 42, 0.18);
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(12px);
-  cursor: pointer;
-  font: inherit;
-  font-size: 16px;
-  line-height: 1;
-}
-
-.post-actions button span {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-}
-
-.post-cover-panel {
-  position: relative;
-  width: 44%;
-  height: 220px;
-  flex: 0 0 44%;
-  overflow: hidden;
-  background: var(--studio-cover-bg);
-}
-
-.post-cover-panel.right {
-  order: 2;
-}
-
-.post-cover {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.post-cover-image {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 1;
-  display: block;
-  transform: translate(-50%, -50%) scale(1);
-  transform-origin: center;
-  transition: transform 0.6s ease;
-}
-
-.post-cover-image.is-fill-width {
-  width: 100%;
-  height: auto;
-}
-
-.post-cover-image.is-fill-height {
-  width: auto;
-  height: 100%;
-}
-
 .studio-pagination {
   display: flex;
   justify-content: center;
@@ -922,129 +745,6 @@ const goToPage = (page: number) => {
   margin-top: 8px;
   background: rgba(15, 23, 42, 0.2);
   border-top: 0;
-}
-
-.post-info {
-  flex: 1;
-  min-width: 0;
-  padding: 24px 32px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.article-title {
-  color: var(--studio-text);
-  font-size: 23px;
-  font-weight: 800;
-  line-height: 1.34;
-  text-decoration: none;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  transition: color 0.2s ease;
-}
-
-.article-title:hover {
-  color: #1d4ed8;
-}
-
-.studio-page.is-night-theme .article-title:hover {
-  color: #93c5fd;
-}
-
-.article-meta {
-  margin-top: 15px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px 15px;
-  color: var(--studio-muted);
-  font-size: 13px;
-  line-height: 1;
-}
-
-.article-meta span {
-  min-height: 18px;
-  padding: 0;
-  border-radius: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  box-sizing: border-box;
-}
-
-.studio-page.is-night-theme .article-meta span {
-  background: transparent;
-}
-
-.article-meta svg {
-  width: 14px;
-  height: 14px;
-  color: #3b82f6;
-  flex: 0 0 auto;
-}
-
-.status-pill {
-  min-height: 22px;
-  padding: 0 9px !important;
-  border-radius: 999px;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 22px;
-}
-
-.status-pill.published {
-  background: var(--studio-chip-bg);
-}
-
-.status-pill.draft {
-  background: var(--studio-muted-chip-bg);
-}
-
-.post-info p {
-  margin: 14px 0 0;
-  padding-left: 12px;
-  border-left: 3px solid rgba(59, 130, 246, 0.28);
-  color: var(--studio-body);
-  font-size: 15px;
-  line-height: 1.66;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.studio-page.is-night-theme .post-info p {
-  border-left-color: rgba(147, 197, 253, 0.34);
-}
-
-.tag-row {
-  margin-top: 18px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.tag-row span {
-  min-height: 22px;
-  padding: 0 9px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  color: var(--studio-muted);
-  background: rgba(148, 163, 184, 0.12);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 22px;
-}
-
-.studio-page.is-night-theme .tag-row span {
-  color: rgba(226, 232, 240, 0.86);
-  background: rgba(148, 163, 184, 0.16);
 }
 
 .studio-aside {
@@ -1345,43 +1045,5 @@ const goToPage = (page: number) => {
     height: 66px;
   }
 
-  .post-row {
-    display: block;
-  }
-
-  .post-cover-panel,
-  .post-cover-panel.right {
-    width: 100%;
-    height: 180px;
-    flex-basis: auto;
-    order: initial;
-  }
-
-  .post-actions {
-    bottom: 12px;
-    left: 12px;
-    right: auto;
-    gap: 6px;
-  }
-
-  .post-cover-panel.right .post-actions {
-    right: 12px;
-    left: auto;
-  }
-
-  .post-actions button {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
-  }
-
-  .post-info {
-    padding: 22px 20px;
-  }
-
-  .article-title {
-    font-size: 20px;
-    -webkit-line-clamp: 2;
-  }
 }
 </style>
