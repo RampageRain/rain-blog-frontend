@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
@@ -304,6 +304,40 @@ const importMarkdown = () => {
 const goToPage = (page: number) => {
   currentPage.value = Math.min(Math.max(page, 1), totalPages.value)
 }
+
+const postListRef = ref<HTMLElement | null>(null)
+const reservedListMinHeight = ref('')
+
+// 预留「满页卡片」所需高度，使分页区在翻页时始终停在同一位置（参考文章展示页的固定分页）。
+const updateReservedListHeight = () => {
+  const list = postListRef.value
+  if (!list) {
+    return
+  }
+
+  const cards = Array.from(list.querySelectorAll<HTMLElement>('.studio-post-card'))
+  if (!cards.length) {
+    reservedListMinHeight.value = ''
+    return
+  }
+
+  const gap = 16
+  const maxCardHeight = Math.max(...cards.map((card) => card.getBoundingClientRect().height))
+  reservedListMinHeight.value = `${Math.round(pageSize * maxCardHeight + (pageSize - 1) * gap)}px`
+}
+
+watch(paginatedPosts, () => {
+  void nextTick(updateReservedListHeight)
+})
+
+onMounted(() => {
+  void nextTick(updateReservedListHeight)
+  window.addEventListener('resize', updateReservedListHeight)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateReservedListHeight)
+})
 </script>
 
 <template>
@@ -472,7 +506,12 @@ const goToPage = (page: number) => {
           </div>
         </header>
 
-        <section class="post-list" aria-label="文章列表">
+        <section
+          ref="postListRef"
+          class="post-list"
+          aria-label="文章列表"
+          :style="reservedListMinHeight ? { minHeight: reservedListMinHeight } : undefined"
+        >
           <StudioPostCard
             v-for="(post, index) in paginatedPosts"
             :key="post.id"
@@ -486,25 +525,37 @@ const goToPage = (page: number) => {
         </section>
 
         <nav class="studio-pagination" aria-label="文章分页">
-          <button type="button" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
-            <Icon icon="fa-solid:angle-left" aria-hidden="true" />
-          </button>
-          <button
-            v-for="page in totalPages"
-            :key="page"
-            type="button"
-            :class="{ active: page === currentPage }"
-            @click="goToPage(page)"
-          >
-            {{ page }}
-          </button>
-          <button
-            type="button"
-            :disabled="currentPage === totalPages"
-            @click="goToPage(currentPage + 1)"
-          >
-            <Icon icon="fa-solid:angle-right" aria-hidden="true" />
-          </button>
+          <div class="pagination-row">
+            <div class="pagination-control prev">
+              <button
+                type="button"
+                class="pagination-button"
+                :disabled="currentPage === 1"
+                aria-label="上一页"
+                @click="goToPage(currentPage - 1)"
+              >
+                <Icon icon="fa-solid:angle-left" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div class="pagination-info">
+              <span>{{ currentPage }}</span>
+              <em>/</em>
+              <span>{{ totalPages }}</span>
+            </div>
+
+            <div class="pagination-control next">
+              <button
+                type="button"
+                class="pagination-button"
+                :disabled="currentPage === totalPages"
+                aria-label="下一页"
+                @click="goToPage(currentPage + 1)"
+              >
+                <Icon icon="fa-solid:angle-right" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
         </nav>
       </main>
     </section>
@@ -525,6 +576,10 @@ const goToPage = (page: number) => {
   --studio-cover-bg: rgba(226, 232, 240, 0.86);
   --studio-chip-bg: linear-gradient(to right, #0000cd 0%, #0f9d58 100%);
   --studio-muted-chip-bg: linear-gradient(to right, #0000ff 0%, #4169e1 100%);
+  --studio-title-hover: #1d4ed8;
+  --studio-quote-border: rgba(59, 130, 246, 0.28);
+  --studio-tag-color: #64748b;
+  --studio-tag-bg: rgba(148, 163, 184, 0.12);
 
   position: relative;
   min-height: 100vh;
@@ -532,7 +587,7 @@ const goToPage = (page: number) => {
   color: var(--studio-body);
   background-position: center top;
   background-size: cover;
-  background-attachment: scroll;
+  background-attachment: fixed;
 }
 
 .studio-page::before {
@@ -548,9 +603,17 @@ const goToPage = (page: number) => {
   --studio-body: rgba(226, 232, 240, 0.88);
   --studio-muted: rgba(203, 213, 225, 0.84);
   --studio-cover-bg: rgba(15, 23, 42, 0.72);
+  --studio-title-hover: #93c5fd;
+  --studio-quote-border: rgba(147, 197, 253, 0.34);
+  --studio-tag-color: rgba(226, 232, 240, 0.86);
+  --studio-tag-bg: rgba(148, 163, 184, 0.16);
 }
 
 .studio-layout {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+
   width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
   padding-bottom: 46px;
@@ -562,7 +625,9 @@ const goToPage = (page: number) => {
 
 .workspace {
   min-width: 0;
-  display: grid;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
@@ -572,8 +637,6 @@ const goToPage = (page: number) => {
   border-radius: 8px;
   background: var(--studio-card-bg);
   box-shadow: var(--studio-card-shadow);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
   transition:
     box-shadow 0.3s ease,
     transform 0.3s ease;
@@ -690,55 +753,88 @@ const goToPage = (page: number) => {
 
 .post-list {
   display: grid;
+  align-content: start;
   gap: 16px;
 }
 
 .studio-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
+  width: 100%;
 }
 
-.studio-pagination button {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+.studio-pagination .pagination-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+}
+
+.studio-pagination .pagination-control.prev {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.studio-pagination .pagination-control.next {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.studio-pagination .pagination-button {
+  width: 56px;
+  height: 56px;
+  border: 0;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--studio-body);
-  background: var(--studio-card-bg);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  color: #ffffff;
+  background: var(--studio-chip-bg);
+  box-shadow: 0 14px 28px rgba(1, 1, 254, 0.22);
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
   transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
-.studio-pagination button:hover:not(:disabled),
-.studio-pagination button.active {
-  color: #ffffff;
-  border-color: transparent;
-  background: rgba(29, 78, 216, 0.88);
-  transform: translateY(-1px);
+.studio-pagination .pagination-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(1, 1, 254, 0.28);
 }
 
-.studio-pagination button:disabled {
+.studio-pagination .pagination-button:disabled {
+  color: rgba(100, 116, 139, 0.72);
+  background: rgba(203, 213, 225, 0.82);
+  box-shadow: none;
   cursor: not-allowed;
-  opacity: 0.45;
+}
+
+.studio-page.is-night-theme .studio-pagination .pagination-button:disabled {
+  color: rgba(203, 213, 225, 0.42);
+  background: rgba(15, 23, 42, 0.54);
+}
+
+.studio-pagination .pagination-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--studio-text);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.studio-pagination .pagination-info em {
+  font-style: normal;
+  opacity: 0.62;
 }
 
 .studio-pagination svg {
-  width: 12px;
-  height: 12px;
+  width: 22px;
+  height: 22px;
 }
 
 .studio-page :deep(.blog-footer) {
@@ -902,6 +998,10 @@ const goToPage = (page: number) => {
   transform: translate(-50%, -50%) scale(1.035);
 }
 
+.recent-list a:hover strong {
+  color: var(--studio-title-hover);
+}
+
 .recent-list a > span:not(.recent-thumb) {
   min-width: 0;
   display: grid;
@@ -916,6 +1016,7 @@ const goToPage = (page: number) => {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  transition: color 0.2s ease;
 }
 
 .recent-list time {

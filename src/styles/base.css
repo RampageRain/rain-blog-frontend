@@ -1,8 +1,10 @@
 :root {
-  /* 正文/全局字体：与 Matery 完全一致，取自其内置 Materialize 1.2.1 的 html 字体栈。
-     系统字体优先（Windows→Segoe UI，Mac→苹方/SF，Android/Linux→Roboto），随系统优雅降级，无需安装字体。 */
+  /* 正文/全局字体：与 Matery 官网 demo 一致。
+     Matery 基于 Materialize，其 Material Design 观感来自 Google Roboto（在 index.html 以 webfont 引入）。
+     这里把 Roboto 置于栈首，保证 Latin/数字在各系统都渲染为 Roboto（与 demo 一致）；
+     中文等 Roboto 不含的字形自动回退到系统字体（Windows→微软雅黑，Mac→苹方），与 Matery 行为相同。 */
   --blog-font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell,
+    Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen-Sans, Ubuntu, Cantarell,
     'Helvetica Neue', sans-serif;
 
   /* 行内代码 / 代码块字体：取自 Matery matery.css 的 code 字体栈 */

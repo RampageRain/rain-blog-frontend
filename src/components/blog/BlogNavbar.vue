@@ -286,8 +286,6 @@ onUnmounted(() => {
   box-shadow: 0 1px 12px rgba(255, 255, 255, 0.08);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .brand {

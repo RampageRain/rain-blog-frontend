@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
@@ -32,26 +32,43 @@ const emit = defineEmits<{
 }>()
 
 const coverRef = ref<HTMLElement | null>(null)
+const imageRef = ref<HTMLImageElement | null>(null)
 const coverFitMode = ref<ImageFitMode>('fill-width')
+
+let resizeObserver: ResizeObserver | undefined
 
 const statusLabel: Record<PostStatus, string> = {
   published: '已发布',
   draft: '草稿',
 }
 
-function updateCoverFit(event: Event) {
-  const image = event.target
-  if (!(image instanceof HTMLImageElement) || !image.naturalWidth || !image.naturalHeight) {
+function updateCoverFit() {
+  const cover = coverRef.value
+  const image = imageRef.value
+
+  if (!cover || !image || !image.naturalWidth || !image.naturalHeight) {
     return
   }
 
-  const cover = coverRef.value
-  const coverRatio =
-    cover && cover.clientWidth && cover.clientHeight ? cover.clientWidth / cover.clientHeight : 44 / 26
+  const coverRatio = cover.clientWidth && cover.clientHeight ? cover.clientWidth / cover.clientHeight : 44 / 26
   const imageRatio = image.naturalWidth / image.naturalHeight
 
   coverFitMode.value = imageRatio >= coverRatio ? 'fill-height' : 'fill-width'
 }
+
+onMounted(() => {
+  resizeObserver = new ResizeObserver(updateCoverFit)
+
+  if (coverRef.value) {
+    resizeObserver.observe(coverRef.value)
+  }
+
+  void nextTick(updateCoverFit)
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+})
 </script>
 
 <template>
@@ -61,56 +78,50 @@ function updateCoverFit(event: Event) {
         <div ref="coverRef" class="post-cover">
           <RouterLink class="post-cover-link" :to="`/posts/${post.id}`" :title="post.title">
             <img
+              ref="imageRef"
               class="post-cover-image"
               :class="`is-${coverFitMode}`"
               :src="post.cover"
               :alt="post.title"
+              decoding="async"
               @load="updateCoverFit"
             />
           </RouterLink>
 
-          <div class="post-actions-zone">
-            <div class="post-actions-boundary">
-              <div class="post-actions" aria-label="文章操作">
-                <div class="action-boundary">
-                  <button
-                    type="button"
-                    class="preview"
-                    title="预览"
-                    aria-label="预览文章"
-                    @click="emit('preview', post)"
-                  >
-                    <Icon icon="fa-regular:eye" aria-hidden="true" />
-                    <span>预览</span>
-                  </button>
-                </div>
+          <div class="post-actions-zone" :class="{ right: props.reversed }">
+            <div class="post-actions" aria-label="文章操作">
+              <span class="action-boundary">
+                <button
+                  type="button"
+                  class="preview"
+                  title="预览"
+                  aria-label="预览文章"
+                  @click="emit('preview', post)"
+                >
+                  <Icon icon="fa-regular:eye" aria-hidden="true" />
+                  <span>预览</span>
+                </button>
+              </span>
 
-                <div class="action-boundary">
-                  <button
-                    type="button"
-                    class="edit"
-                    title="编辑"
-                    aria-label="编辑文章"
-                    @click="emit('edit', post)"
-                  >
-                    <Icon icon="fa-solid:pen" aria-hidden="true" />
-                    <span>编辑</span>
-                  </button>
-                </div>
+              <span class="action-boundary">
+                <button type="button" class="edit" title="编辑" aria-label="编辑文章" @click="emit('edit', post)">
+                  <Icon icon="fa-solid:pen" aria-hidden="true" />
+                  <span>编辑</span>
+                </button>
+              </span>
 
-                <div class="action-boundary">
-                  <button
-                    type="button"
-                    class="danger"
-                    title="删除"
-                    aria-label="删除文章"
-                    @click="emit('delete', post)"
-                  >
-                    <Icon icon="fa-regular:trash-alt" aria-hidden="true" />
-                    <span>删除</span>
-                  </button>
-                </div>
-              </div>
+              <span class="action-boundary">
+                <button
+                  type="button"
+                  class="danger"
+                  title="删除"
+                  aria-label="删除文章"
+                  @click="emit('delete', post)"
+                >
+                  <Icon icon="fa-regular:trash-alt" aria-hidden="true" />
+                  <span>删除</span>
+                </button>
+              </span>
             </div>
           </div>
         </div>
@@ -155,34 +166,41 @@ function updateCoverFit(event: Event) {
 .studio-post-card {
   position: relative;
   overflow: hidden;
-  overflow: clip;
+  min-height: 220px;
   display: flex;
   border-radius: 8px;
   contain: paint;
-  isolation: isolate;
 }
 
 .studio-post-card-surface {
   overflow: hidden;
-  overflow: clip;
   width: 100%;
+  min-width: 0;
+  min-height: 220px;
   display: flex;
   align-items: stretch;
   flex: 1;
   border-radius: 8px;
   background: var(--studio-card-bg);
   box-shadow: none;
+  transition:
+    background 0.28s ease,
+    transform 0.24s ease;
   isolation: isolate;
+}
+
+.studio-post-card:hover .studio-post-card-surface {
+  transform: translateY(-3px);
 }
 
 .post-cover-section {
   position: relative;
   width: 44%;
-  height: 220px;
+  min-height: 220px;
   flex: 0 0 44%;
+  align-self: stretch;
   overflow: hidden;
-  overflow: clip;
-  isolation: isolate;
+  background: var(--studio-cover-bg);
 }
 
 .post-cover-section.right {
@@ -193,35 +211,32 @@ function updateCoverFit(event: Event) {
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: 220px;
   overflow: hidden;
-  overflow: clip;
-  background: var(--studio-cover-bg);
-  isolation: isolate;
 }
 
 .post-cover-link {
   position: absolute;
   inset: 0;
   z-index: 1;
-  overflow: hidden;
-  overflow: clip;
   display: block;
+  overflow: hidden;
 }
 
 .post-cover-image {
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 1;
   display: block;
-  min-width: 100%;
-  min-height: 100%;
   max-width: none;
+  max-height: none;
   transform: translate(-50%, -50%) scale(1);
   transform-origin: center;
   transition: transform 0.3s ease;
 }
 
-.post-cover:hover .post-cover-image {
+.studio-post-card:hover .post-cover-image {
   transform: translate(-50%, -50%) scale(1.035);
 }
 
@@ -244,50 +259,42 @@ function updateCoverFit(event: Event) {
   display: flex;
   justify-content: flex-start;
   overflow: hidden;
-  overflow: clip;
   pointer-events: none;
-  isolation: isolate;
 }
 
-.post-cover-section.right .post-actions-zone {
+.post-actions-zone.right {
   justify-content: flex-end;
-}
-
-.post-actions-boundary {
-  overflow: hidden;
-  overflow: clip;
-  border-radius: 999px;
-  pointer-events: auto;
-  isolation: isolate;
 }
 
 .post-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  pointer-events: auto;
 }
 
 .action-boundary {
   width: 42px;
   height: 42px;
   overflow: hidden;
-  overflow: clip;
   flex: 0 0 auto;
   border-radius: 999px;
-  isolation: isolate;
+  display: inline-flex;
 }
 
 .post-actions button {
   width: 42px;
   height: 42px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  background: rgba(15, 23, 42, 0.18);
+  background: rgba(15, 23, 42, 0.22);
   box-shadow: none;
   cursor: pointer;
   font: inherit;
@@ -295,7 +302,31 @@ function updateCoverFit(event: Event) {
   line-height: 1;
   transition:
     color 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.action-boundary:hover .preview {
+  color: #34d399;
+  background: rgba(15, 23, 42, 0.5);
+  border-color: #22c55e;
+}
+
+.action-boundary:hover .edit {
+  color: #60a5fa;
+  background: rgba(15, 23, 42, 0.5);
+  border-color: #3b82f6;
+}
+
+.action-boundary:hover .danger {
+  color: #f87171;
+  background: rgba(15, 23, 42, 0.5);
+  border-color: #ef4444;
+}
+
+.action-boundary:hover :deep(svg) {
+  transform: scale(1.18);
 }
 
 .post-actions button :deep(svg) {
@@ -303,21 +334,7 @@ function updateCoverFit(event: Event) {
   height: 1em;
   display: block;
   flex: 0 0 auto;
-}
-
-.action-boundary:hover .preview {
-  color: #22c55e;
-  background: rgba(15, 23, 42, 0.24);
-}
-
-.action-boundary:hover .edit {
-  color: #60a5fa;
-  background: rgba(15, 23, 42, 0.24);
-}
-
-.action-boundary:hover .danger {
-  color: #ef4444;
-  background: rgba(15, 23, 42, 0.24);
+  transition: transform 0.2s ease;
 }
 
 .post-actions button span {
@@ -333,9 +350,7 @@ function updateCoverFit(event: Event) {
   min-width: 0;
   flex: 1;
   overflow: hidden;
-  overflow: clip;
   display: flex;
-  isolation: isolate;
 }
 
 .post-info {
@@ -349,9 +364,7 @@ function updateCoverFit(event: Event) {
 
 .title-hover-boundary {
   overflow: hidden;
-  overflow: clip;
   border-radius: 8px;
-  isolation: isolate;
 }
 
 .article-title {
@@ -367,21 +380,11 @@ function updateCoverFit(event: Event) {
   overflow: hidden;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    padding-left 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .title-hover-boundary:hover .article-title {
-  padding-left: 10px;
-  color: #1d4ed8;
-  background: rgba(59, 130, 246, 0.08);
-}
-
-:global(.studio-page.is-night-theme) .title-hover-boundary:hover .article-title {
-  color: #93c5fd;
-  background: rgba(147, 197, 253, 0.1);
+  color: var(--studio-title-hover);
 }
 
 .article-meta {
@@ -434,7 +437,7 @@ function updateCoverFit(event: Event) {
 .post-info p {
   margin: 14px 0 0;
   padding-left: 12px;
-  border-left: 3px solid rgba(59, 130, 246, 0.28);
+  border-left: 3px solid var(--studio-quote-border);
   color: var(--studio-body);
   font-size: 15px;
   line-height: 1.66;
@@ -442,10 +445,6 @@ function updateCoverFit(event: Event) {
   overflow: hidden;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-}
-
-:global(.studio-page.is-night-theme) .post-info p {
-  border-left-color: rgba(147, 197, 253, 0.34);
 }
 
 .tag-row {
@@ -461,16 +460,11 @@ function updateCoverFit(event: Event) {
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  color: var(--studio-muted);
-  background: rgba(148, 163, 184, 0.12);
+  color: var(--studio-tag-color);
+  background: var(--studio-tag-bg);
   font-size: 12px;
   font-weight: 500;
   line-height: 22px;
-}
-
-:global(.studio-page.is-night-theme) .tag-row span {
-  color: rgba(226, 232, 240, 0.86);
-  background: rgba(148, 163, 184, 0.16);
 }
 
 @media (max-width: 720px) {
@@ -482,12 +476,17 @@ function updateCoverFit(event: Event) {
   .post-cover-section.right {
     width: 100%;
     height: 180px;
+    min-height: 180px;
     flex-basis: auto;
     order: initial;
   }
 
+  .post-cover {
+    min-height: 180px;
+  }
+
   .post-actions-zone,
-  .post-cover-section.right .post-actions-zone {
+  .post-actions-zone.right {
     left: 12px;
     right: 12px;
     bottom: 12px;
