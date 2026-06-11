@@ -294,7 +294,7 @@ const deletePost = (post: PostItem) => {
 }
 
 const createPost = () => {
-  window.alert('创建文章功能待接入')
+  router.push('/studio/write')
 }
 
 const importMarkdown = () => {

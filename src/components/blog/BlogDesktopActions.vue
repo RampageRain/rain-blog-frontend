@@ -9,11 +9,13 @@ withDefaults(
     showToc?: boolean
     tocActive?: boolean
     showTop?: boolean
+    topAlwaysVisible?: boolean
   }>(),
   {
     showToc: false,
     tocActive: false,
     showTop: true,
+    topAlwaysVisible: false,
   },
 )
 
@@ -55,7 +57,7 @@ const { isLightTheme, toggleTheme } = useBlogTheme()
       <Icon icon="fa-solid:list-ul" aria-hidden="true" />
     </button>
 
-    <BackTop v-if="showTop" />
+    <BackTop v-if="showTop" :always-visible="topAlwaysVisible" />
   </div>
 </template>
 

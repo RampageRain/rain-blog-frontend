@@ -4,6 +4,14 @@ import { Icon } from '@iconify/vue'
 
 const visible = ref(false)
 const showOffset = 320
+const props = withDefaults(
+  defineProps<{
+    alwaysVisible?: boolean
+  }>(),
+  {
+    alwaysVisible: false,
+  },
+)
 
 function updateVisible() {
   visible.value = window.scrollY > showOffset
@@ -29,7 +37,7 @@ onBeforeUnmount(() => {
 <template>
   <Transition name="back-top-fade">
     <button
-      v-if="visible"
+      v-if="props.alwaysVisible || visible"
       type="button"
       class="top-scroll"
       aria-label="返回顶部"

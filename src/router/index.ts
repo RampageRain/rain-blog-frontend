@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/blog/HomeView.vue'
 import LoginView from '@/views/studio/LoginView.vue'
 import DashboardView from '@/views/studio/DashboardView.vue'
+import WriteView from '@/views/studio/WriteView.vue'
 import PostListView from '@/views/blog/PostListView.vue'
 import PostDetailView from '@/views/blog/PostDetailView.vue'
 import AboutView from '@/views/blog/AboutView.vue'
@@ -42,6 +43,14 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/studio/write',
+      name: 'studioWrite',
+      component: WriteView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
   ],
   scrollBehavior(to) {
     if (to.path === '/' && to.hash === '#home-posts') {
@@ -58,7 +67,9 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const token = localStorage.getItem('rain_blog_token')
-  if (to.meta.requiresAuth && !token) {
+  const allowStudioPreview = import.meta.env.DEV
+
+  if (to.meta.requiresAuth && !token && !allowStudioPreview) {
     return './studio/login'
   }
   return true
