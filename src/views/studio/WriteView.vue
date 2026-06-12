@@ -1,17 +1,25 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { Icon, loadIcon } from '@iconify/vue'
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch} from 'vue'
+import {useRouter} from 'vue-router'
+import {Icon, loadIcon} from '@iconify/vue'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
-import { useBlogTheme } from '@/composables/useBlogTheme'
-import { countMarkdownWords } from '@/utils/markdown'
+import {useBlogTheme} from '@/composables/useBlogTheme'
+import {countMarkdownWords} from '@/utils/markdown'
 
 import postListBgLight from '@/assets/images/postlist-bg-light.jpg'
 import postListBgNight from '@/assets/images/postlist-bg-night.jpg'
+import writeVisualImage1 from '@/assets/images/home-bg-mobile-1.jpg'
+import writeVisualImage2 from '@/assets/images/login-bg-mobile.jpg'
 import defaultCover from '@/assets/images/home-bg-1.jpg'
+
+/* 随机背景候选池 */
+const VISUAL_IMAGE_POOL = [
+  writeVisualImage1,
+  writeVisualImage2
+]
 
 interface OutlineItem {
   index: number
@@ -19,7 +27,7 @@ interface OutlineItem {
   text: string
 }
 
-const OPACITY_STORAGE_KEY = 'rain-blog-write-card-opacity'
+const OPACITY_STORAGE_KEY = 'rain-blog-write-visual-opacity'
 const DRAFT_CACHE_ID = 'rain-blog-write-draft'
 
 /* 工具栏图标统一替换为博客同款 Font Awesome（经由 @iconify/vue 加载）。 */
@@ -32,8 +40,6 @@ const TOOLBAR_FA_ICONS: Record<string, string> = {
   list: 'fa-solid:list-ul',
   'ordered-list': 'fa-solid:list-ol',
   check: 'fa-regular:check-square',
-  'save-draft': 'fa-regular:save',
-  publish: 'fa-regular:paper-plane',
   code: 'fa-regular:file-code',
   'inline-code': 'fa-solid:code',
   link: 'fa-solid:link',
@@ -66,7 +72,7 @@ async function buildToolbarIconSvgs(): Promise<Record<string, string>> {
 }
 
 const router = useRouter()
-const { isLightTheme, toggleTheme } = useBlogTheme()
+const {isLightTheme, toggleTheme} = useBlogTheme()
 
 const sampleMarkdown = [
   '## 为什么选择 Markdown',
@@ -105,14 +111,17 @@ const tags = ref(['Markdown', '写作', '效率'])
 const tagDraft = ref('')
 const isTagComposerOpen = ref(false)
 const isOutlineVisible = ref(true)
+const isNavVisible = ref(false)
 const isPublishOpen = ref(false)
 const isOpacityPanelOpen = ref(false)
 const autoSaveTime = ref('--:--:--')
-const cardOpacity = ref(48)
+const visualOpacity = ref(100)
 const cover = defaultCover
+const visualImage = ref(writeVisualImage1)
 
 const editorEl = ref<HTMLElement | null>(null)
 const tagInputRef = ref<HTMLInputElement | null>(null)
+const visualUploadRef = ref<HTMLInputElement | null>(null)
 const vditor = shallowRef<Vditor | null>(null)
 const isEditorReady = ref(false)
 
@@ -148,27 +157,45 @@ const pageStyle = computed(() => {
   }
 })
 
-/* 透明度只联动内容填充与模糊：0% 时内容完全融入背景；
- * 边框、分隔线、阴影保持常驻（与登录卡风格一致）。 */
-const cardStyle = computed(() => {
-  const opacity = cardOpacity.value / 100
-  const scaled = (alpha: number) => +(alpha * opacity).toFixed(3)
-  const blur = `${Math.round(14 * opacity)}px`
+/* 透明度滑杆只控制右侧图片的不透明度。 */
+const visualImageStyle = computed(() => ({
+  backgroundImage: `url(${visualImage.value})`,
+  opacity: (visualOpacity.value / 100).toFixed(2),
+}))
 
-  if (isLightTheme.value) {
-    return {
-      '--write-card-bg': `rgba(255, 255, 255, ${opacity.toFixed(2)})`,
-      '--write-strip-bg': `rgba(255, 255, 255, ${scaled(0.32)})`,
-      '--write-card-blur': blur,
-    }
+/* 随机切换写作背景（避免连续重复） */
+function shuffleVisualImage() {
+  const candidates = VISUAL_IMAGE_POOL.filter((image) => image !== visualImage.value)
+  const next = candidates[Math.floor(Math.random() * candidates.length)]
+
+  if (next) {
+    visualImage.value = next
+  }
+}
+
+/* 上传本地图片作为写作背景（仅当前会话生效） */
+let uploadedVisualUrl: string | null = null
+
+function openVisualUpload() {
+  visualUploadRef.value?.click()
+}
+
+function onVisualUploadChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) {
+    return
   }
 
-  return {
-    '--write-card-bg': `rgba(15, 23, 42, ${opacity.toFixed(2)})`,
-    '--write-strip-bg': `rgba(15, 23, 42, ${scaled(0.35)})`,
-    '--write-card-blur': blur,
+  if (uploadedVisualUrl) {
+    URL.revokeObjectURL(uploadedVisualUrl)
   }
-})
+
+  uploadedVisualUrl = URL.createObjectURL(file)
+  visualImage.value = uploadedVisualUrl
+  input.value = ''
+}
 
 function touchAutoSave() {
   autoSaveTime.value = new Intl.DateTimeFormat('zh-CN', {
@@ -194,7 +221,7 @@ function applyEditorTheme() {
 onMounted(async () => {
   const storedOpacity = Number.parseInt(window.localStorage.getItem(OPACITY_STORAGE_KEY) || '', 10)
   if (!Number.isNaN(storedOpacity) && storedOpacity >= 0 && storedOpacity <= 100) {
-    cardOpacity.value = storedOpacity
+    visualOpacity.value = storedOpacity
   }
 
   const iconSvgs = await buildToolbarIconSvgs()
@@ -203,7 +230,7 @@ onMounted(async () => {
     return
   }
 
-  const withFaIcon = (name: string) => (iconSvgs[name] ? { name, icon: iconSvgs[name] } : name)
+  const withFaIcon = (name: string) => (iconSvgs[name] ? {name, icon: iconSvgs[name]} : name)
 
   vditor.value = new Vditor(editorEl.value, {
     after: () => {
@@ -211,9 +238,9 @@ onMounted(async () => {
       markdown.value = vditor.value?.getValue() ?? markdown.value
       applyEditorTheme()
     },
-    cache: { enable: true, id: DRAFT_CACHE_ID },
+    cache: {enable: true, id: DRAFT_CACHE_ID},
     cdn: '/vditor',
-    counter: { enable: false },
+    counter: {enable: false},
     icon: 'material',
     input: (value: string) => {
       markdown.value = value
@@ -223,7 +250,7 @@ onMounted(async () => {
     mode: 'ir',
     placeholder: '开始写作，支持直接输入 Markdown 语法…',
     preview: {
-      hljs: { lineNumber: false },
+      hljs: {lineNumber: false},
       theme: {
         current: isLightTheme.value ? 'light' : 'dark',
         path: '/vditor/dist/css/content-theme',
@@ -247,9 +274,7 @@ onMounted(async () => {
         name: 'insert-image',
         tip: '插入图片',
         tipPosition: 's',
-        icon:
-          iconSvgs['insert-image'] ||
-          '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 15-3.8-3.8a1.6 1.6 0 0 0-2.3 0L7 19"/></svg>',
+        icon: iconSvgs['insert-image'] || '<span>图</span>',
         click: () => {
           vditor.value?.insertValue('![描述](图片地址)')
         },
@@ -261,28 +286,8 @@ onMounted(async () => {
       withFaIcon('redo'),
       '|',
       withFaIcon('edit-mode'),
-      {
-        name: 'save-draft',
-        tip: '保存草稿',
-        tipPosition: 's',
-        className: 'toolbar-item--right',
-        icon: iconSvgs['save-draft'] || '<span>存</span>',
-        click: () => {
-          saveDraft()
-        },
-      },
-      {
-        name: 'publish',
-        tip: '发布文章',
-        tipPosition: 's',
-        className: 'toolbar-item--publish',
-        icon: iconSvgs['publish'] || '<span>发</span>',
-        click: () => {
-          openPublish()
-        },
-      },
     ],
-    toolbarConfig: { pin: false },
+    toolbarConfig: {pin: false},
     value: markdown.value,
   })
 })
@@ -290,15 +295,46 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   vditor.value?.destroy()
   vditor.value = null
+
+  if (uploadedVisualUrl) {
+    URL.revokeObjectURL(uploadedVisualUrl)
+    uploadedVisualUrl = null
+  }
+
+  if (navHideTimer) {
+    clearTimeout(navHideTimer)
+    navHideTimer = undefined
+  }
 })
 
 watch(isLightTheme, () => {
   applyEditorTheme()
 })
 
-watch(cardOpacity, (value) => {
+watch(visualOpacity, (value) => {
   window.localStorage.setItem(OPACITY_STORAGE_KEY, String(value))
 })
+
+/* 导航悬浮：离开后保留一段缓冲时间再收回，方便点击 */
+let navHideTimer: ReturnType<typeof setTimeout> | undefined
+
+function showNav() {
+  if (navHideTimer) {
+    clearTimeout(navHideTimer)
+    navHideTimer = undefined
+  }
+  isNavVisible.value = true
+}
+
+function hideNavDeferred() {
+  if (navHideTimer) {
+    clearTimeout(navHideTimer)
+  }
+  navHideTimer = setTimeout(() => {
+    isNavVisible.value = false
+    navHideTimer = undefined
+  }, 800)
+}
 
 function goBack() {
   router.push('/studio/dashboard')
@@ -317,8 +353,8 @@ function toggleOpacityPanel() {
 }
 
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-  editorEl.value?.querySelector('.vditor-reset')?.scrollTo({ top: 0, behavior: 'smooth' })
+  window.scrollTo({top: 0, behavior: 'smooth'})
+  editorEl.value?.querySelector('.vditor-reset')?.scrollTo({top: 0, behavior: 'smooth'})
 }
 
 function jumpToOutline(item: OutlineItem) {
@@ -329,7 +365,7 @@ function jumpToOutline(item: OutlineItem) {
   }
 
   const headings = root.querySelectorAll('h1, h2, h3, h4, h5, h6')
-  headings[item.index]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  headings[item.index]?.scrollIntoView({behavior: 'smooth', block: 'start'})
 }
 
 function selectCategory(nextCategory: string) {
@@ -399,32 +435,32 @@ function confirmPublish() {
 <template>
   <main
     class="write-page"
-    :class="{ 'is-light-theme': isLightTheme, 'is-night-theme': !isLightTheme }"
+    :class="{
+      'is-light-theme': isLightTheme,
+      'is-night-theme': !isLightTheme,
+      'is-nav-open': isNavVisible,
+    }"
     :style="pageStyle"
   >
-    <BlogNavbar />
+    <!-- 顶部导航默认隐藏，鼠标移到屏幕顶缘时滑出 -->
+    <div class="nav-hover-trigger" @mouseenter="showNav"></div>
+    <div
+      class="nav-float"
+      :class="{ 'is-hidden': !isNavVisible }"
+      @mouseenter="showNav"
+      @mouseleave="hideNavDeferred"
+    >
+      <BlogNavbar/>
+    </div>
 
-    <section class="write-workspace" :style="cardStyle">
-      <header class="workspace-bar">
-        <button type="button" class="bar-back" @click="goBack">
-          <Icon icon="fa-solid:arrow-left" aria-hidden="true" />
-          <span>返回</span>
-        </button>
-
-        <span class="bar-spacer"></span>
-
-        <span class="bar-save-state">
-          <Icon icon="fa-regular:save" aria-hidden="true" />
-          已保存 {{ autoSaveTime }}
-        </span>
-      </header>
-
-      <div class="write-main" :class="{ 'is-outline-hidden': !isOutlineVisible }">
-        <aside v-if="isOutlineVisible" class="outline-pane">
+    <section class="write-workspace">
+      <!-- 左侧：大纲栏（默认收起为细条） -->
+      <aside class="outline-rail" :class="{ 'is-open': isOutlineVisible }">
+        <template v-if="isOutlineVisible">
           <div class="outline-head">
             <span>大纲</span>
             <button type="button" title="收起大纲" aria-label="收起大纲" @click="toggleOutline">
-              <Icon icon="fa-solid:angle-double-left" aria-hidden="true" />
+              <Icon icon="fa-solid:angle-double-left" aria-hidden="true"/>
             </button>
           </div>
 
@@ -440,7 +476,7 @@ function confirmPublish() {
             </button>
             <p v-if="outlineItems.length === 0" class="outline-empty">暂无大纲</p>
           </nav>
-        </aside>
+        </template>
 
         <button
           v-else
@@ -450,89 +486,170 @@ function confirmPublish() {
           aria-label="展开大纲"
           @click="toggleOutline"
         >
-          <Icon icon="fa-solid:angle-double-right" aria-hidden="true" />
+          <Icon icon="fa-solid:list-ul" aria-hidden="true"/>
         </button>
+      </aside>
 
-        <section class="editor-pane">
-          <div class="doc-head">
-            <input
-              v-model="title"
-              type="text"
-              class="doc-title"
-              placeholder="输入文章标题…"
-              aria-label="文章标题"
-            />
-            <input
-              v-model="summary"
-              type="text"
-              class="doc-summary"
-              placeholder="输入副标题/摘要…"
-              aria-label="文章摘要"
-            />
+      <!-- 中间：编辑区 -->
+      <section class="editor-pane">
+        <header class="editor-topbar">
+          <button type="button" class="bar-back" @click="goBack">
+            <Icon icon="fa-solid:arrow-left" aria-hidden="true"/>
+            <span>返回</span>
+          </button>
+
+          <span class="bar-spacer"></span>
+
+          <button type="button" class="bar-action draft" @click="saveDraft">
+            <Icon icon="fa-regular:save" aria-hidden="true"/>
+            保存
+          </button>
+          <button type="button" class="bar-action publish" @click="openPublish">
+            <Icon icon="fa-regular:paper-plane" aria-hidden="true"/>
+            发布
+          </button>
+        </header>
+
+        <div class="doc-head">
+          <input
+            v-model="title"
+            type="text"
+            class="doc-title"
+            placeholder="输入文章标题…"
+            aria-label="文章标题"
+          />
+          <input
+            v-model="summary"
+            type="text"
+            class="doc-summary"
+            placeholder="输入副标题/摘要…"
+            aria-label="文章摘要"
+          />
+        </div>
+
+        <div class="editor-body">
+          <div ref="editorEl" class="editor-host"></div>
+          <span class="toolbar-save-state">
+            <Icon icon="fa-regular:save" aria-hidden="true"/>
+            已保存 {{ autoSaveTime }}
+          </span>
+        </div>
+
+        <footer class="editor-footer">
+          <div class="footer-chips">
+            <button
+              type="button"
+              class="chip solid"
+              title="修改分类"
+              @click="openPublish"
+            >
+              {{ category }}
+            </button>
+            <button
+              v-for="tag in tags"
+              :key="tag"
+              type="button"
+              class="chip"
+              title="管理标签"
+              @click="openPublish"
+            >
+              {{ tag }}
+            </button>
+            <button type="button" class="chip chip-add" title="添加标签" @click="openPublish">
+              <Icon icon="fa-solid:plus" aria-hidden="true"/>
+            </button>
           </div>
 
-          <div ref="editorEl" class="editor-host"></div>
-        </section>
-      </div>
+          <span class="bar-spacer"></span>
 
-      <footer class="workspace-status">
-        <span>
-          <Icon icon="fa-regular:file-alt" aria-hidden="true" />
-          字数 {{ wordCount }}
-        </span>
-        <span>
-          <Icon icon="fa-regular:clock" aria-hidden="true" />
-          预计阅读 {{ readMinutes }} 分钟
-        </span>
-        <span class="ok">
-          <Icon icon="fa-solid:check" aria-hidden="true" />
-          已保存
-        </span>
+          <span class="footer-meta">
+            <Icon icon="fa-regular:file-alt" aria-hidden="true"/>
+            字数 {{ wordCount }}
+          </span>
+          <span class="footer-meta">
+            <Icon icon="fa-regular:clock" aria-hidden="true"/>
+            预计阅读 {{ readMinutes }} 分钟
+          </span>
 
-        <span class="bar-spacer"></span>
+          <button
+            type="button"
+            class="status-tool"
+            :title="isLightTheme ? '切换夜间模式' : '切换日间模式'"
+            :aria-label="isLightTheme ? '切换夜间模式' : '切换日间模式'"
+            @click="toggleTheme"
+          >
+            <Icon :icon="isLightTheme ? 'fa-solid:moon' : 'fa-solid:sun'" aria-hidden="true"/>
+          </button>
+          <button
+            type="button"
+            class="status-tool"
+            :class="{ active: isOpacityPanelOpen }"
+            title="图片透明度"
+            aria-label="图片透明度"
+            @click="toggleOpacityPanel"
+          >
+            <Icon icon="fa-solid:sliders-h" aria-hidden="true"/>
+          </button>
+          <button
+            type="button"
+            class="status-tool"
+            title="回到顶部"
+            aria-label="回到顶部"
+            @click="scrollToTop"
+          >
+            <Icon icon="fa-solid:arrow-up" aria-hidden="true"/>
+          </button>
+        </footer>
 
-        <button
-          type="button"
-          class="status-tool"
-          :title="isLightTheme ? '切换夜间模式' : '切换日间模式'"
-          :aria-label="isLightTheme ? '切换夜间模式' : '切换日间模式'"
-          @click="toggleTheme"
-        >
-          <Icon :icon="isLightTheme ? 'fa-solid:moon' : 'fa-solid:sun'" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          class="status-tool"
-          :class="{ active: isOpacityPanelOpen }"
-          title="卡片透明度"
-          aria-label="卡片透明度"
-          @click="toggleOpacityPanel"
-        >
-          <Icon icon="fa-solid:sliders-h" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          class="status-tool"
-          title="回到顶部"
-          aria-label="回到顶部"
-          @click="scrollToTop"
-        >
-          <Icon icon="fa-solid:arrow-up" aria-hidden="true" />
-        </button>
-      </footer>
+        <div v-if="isOpacityPanelOpen" class="opacity-panel">
+          <span class="opacity-label">图片透明度</span>
+          <input
+            v-model.number="visualOpacity"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            aria-label="图片透明度"
+          />
+          <strong>{{ visualOpacity }}%</strong>
+        </div>
+      </section>
 
-      <div v-if="isOpacityPanelOpen" class="opacity-panel">
-        <span class="opacity-label">卡片透明度</span>
-        <input
-          v-model.number="cardOpacity"
-          type="range"
-          min="0"
-          max="100"
-          step="1"
-          aria-label="卡片透明度"
-        />
-        <strong>{{ cardOpacity }}%</strong>
-      </div>
+      <!-- 右侧：整幅图片 + 蒙层 + 背景操作 -->
+      <aside class="visual-pane">
+        <div class="visual-image" :style="visualImageStyle"></div>
+        <div class="visual-mask"></div>
+
+        <div class="visual-tools">
+          <button
+            type="button"
+            class="visual-tool"
+            title="随机背景"
+            aria-label="随机背景"
+            @click="shuffleVisualImage"
+          >
+            <Icon icon="fa-solid:sync-alt" aria-hidden="true"/>
+          </button>
+          <button
+            type="button"
+            class="visual-tool"
+            title="上传背景图片"
+            aria-label="上传背景图片"
+            @click="openVisualUpload"
+          >
+            <Icon icon="fa-solid:upload" aria-hidden="true"/>
+          </button>
+          <input
+            ref="visualUploadRef"
+            type="file"
+            accept="image/*"
+            class="visual-upload-input"
+            aria-hidden="true"
+            tabindex="-1"
+            @change="onVisualUploadChange"
+          />
+        </div>
+      </aside>
     </section>
 
     <div v-if="isPublishOpen" class="publish-overlay" @click.self="closePublish">
@@ -540,7 +657,7 @@ function confirmPublish() {
         <header class="publish-head">
           <h2>发布文章</h2>
           <button type="button" title="关闭" aria-label="关闭" @click="closePublish">
-            <Icon icon="fa-solid:times" aria-hidden="true" />
+            <Icon icon="fa-solid:times" aria-hidden="true"/>
           </button>
         </header>
 
@@ -563,16 +680,18 @@ function confirmPublish() {
         <div class="publish-item">
           <span class="publish-label">标签</span>
           <div class="chip-row">
-            <button v-for="tag in tags" :key="tag" type="button" class="chip tag" @click="removeTag(tag)">
+            <button v-for="tag in tags" :key="tag" type="button" class="chip tag"
+                    @click="removeTag(tag)">
               <span>{{ tag }}</span>
-              <Icon icon="fa-solid:times" aria-hidden="true" />
+              <Icon icon="fa-solid:times" aria-hidden="true"/>
             </button>
-            <button v-if="!isTagComposerOpen" type="button" class="chip tag-add" @click="openTagComposer">
-              <Icon icon="fa-solid:plus" aria-hidden="true" />
+            <button v-if="!isTagComposerOpen" type="button" class="chip tag-add"
+                    @click="openTagComposer">
+              <Icon icon="fa-solid:plus" aria-hidden="true"/>
               <span>添加标签</span>
             </button>
             <label v-else class="chip tag-compose">
-              <Icon icon="fa-solid:plus" aria-hidden="true" />
+              <Icon icon="fa-solid:plus" aria-hidden="true"/>
               <input
                 ref="tagInputRef"
                 v-model="tagDraft"
@@ -601,9 +720,9 @@ function confirmPublish() {
           <div class="publish-item">
             <span class="publish-label">封面</span>
             <button type="button" class="cover-thumb" title="更换封面" aria-label="更换封面">
-              <img :src="cover" alt="文章封面" />
+              <img :src="cover" alt="文章封面"/>
               <span class="cover-mask">
-                <Icon icon="fa-solid:upload" aria-hidden="true" />
+                <Icon icon="fa-solid:upload" aria-hidden="true"/>
                 更换封面
               </span>
             </button>
@@ -617,7 +736,7 @@ function confirmPublish() {
         <footer class="publish-actions">
           <button type="button" class="bar-action draft" @click="closePublish">取消</button>
           <button type="button" class="bar-action publish wide" @click="confirmPublish">
-            <Icon icon="fa-regular:paper-plane" aria-hidden="true" />
+            <Icon icon="fa-regular:paper-plane" aria-hidden="true"/>
             确认发布
           </button>
         </footer>
@@ -630,6 +749,8 @@ function confirmPublish() {
 .write-page {
   --write-card-bg: rgba(255, 255, 255, 0.48);
   --write-strip-bg: rgba(255, 255, 255, 0.32);
+  --write-editor-bg: #ffffff;
+  --write-editor-divider: rgba(51, 65, 85, 0.12);
   --write-panel-bg: rgba(255, 255, 255, 0.94);
   --write-text: #0f172a;
   --write-body: #334155;
@@ -644,19 +765,31 @@ function confirmPublish() {
   --write-tag-bg: rgba(148, 163, 184, 0.16);
   --write-accent: #1d4ed8;
   --write-ok: #0a8f5b;
-  --write-card-shadow: 0 15px 35px rgba(50, 50, 93, 0.16), 0 5px 15px rgba(0, 0, 0, 0.08);
 
   position: relative;
   min-height: 100vh;
-  padding-top: 96px;
+  padding-top: 0;
   color: var(--write-body);
   background-position: center top;
   background-size: cover;
   background-attachment: fixed;
+  transition: padding-top 0.55s ease 0.25s;
+}
+
+/* 导航滑出时内容整体下移，不遮挡大纲和正文 */
+.write-page.is-nav-open {
+  padding-top: 64px;
+  transition: padding-top 0.45s ease;
+}
+
+.write-page.is-nav-open .write-workspace {
+  min-height: calc(100vh - 64px);
 }
 
 .write-page.is-night-theme {
   --write-strip-bg: rgba(15, 23, 42, 0.35);
+  --write-editor-bg: #0f172a;
+  --write-editor-divider: rgba(226, 232, 240, 0.14);
   --write-panel-bg: rgba(15, 23, 42, 0.94);
   --write-text: rgba(248, 250, 252, 0.96);
   --write-body: rgba(226, 232, 240, 0.88);
@@ -670,158 +803,79 @@ function confirmPublish() {
   --write-tag-bg: rgba(148, 163, 184, 0.18);
   --write-accent: #93c5fd;
   --write-ok: #34d399;
-  --write-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
 }
 
+/* ===== 顶部导航：默认隐藏，鼠标移到顶缘滑出 ===== */
+.nav-hover-trigger {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  height: 12px;
+}
+
+.nav-float {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 110;
+  height: 64px;
+  transform: translateY(0);
+  transition: transform 0.45s ease;
+}
+
+/* 收回时更平缓：稍作停留再缓慢滑回 */
+.nav-float.is-hidden {
+  transform: translateY(-100%);
+  transition: transform 0.55s ease 0.25s;
+}
+
+/* ===== 全屏工作区：左大纲 / 中编辑（紧凑） / 右图片（占大头） ===== */
 .write-workspace {
   position: relative;
   z-index: 1;
-  width: min(1280px, calc(100% - 24px));
-  min-height: calc(100vh - 130px);
-  margin: 0 auto 34px;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  overflow: hidden;
-  border: 1px solid var(--write-divider);
-  border-radius: 8px;
+  grid-template-columns: auto minmax(0, 1fr) minmax(280px, 26vw);
+  min-height: 100vh;
   background: var(--write-card-bg);
-  box-shadow: var(--write-card-shadow);
-  backdrop-filter: blur(var(--write-card-blur, 14px));
-  -webkit-backdrop-filter: blur(var(--write-card-blur, 14px));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: background 0.25s ease;
 }
 
-.workspace-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--write-divider);
-  background: var(--write-strip-bg);
-}
-
-.bar-spacer {
-  flex: 1;
-}
-
-.bar-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  padding: 4px 6px;
-  color: var(--write-body);
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  border-radius: 6px;
-  transition: color 0.2s ease;
-}
-
-.bar-back:hover {
-  color: var(--write-accent);
-}
-
-.bar-save-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--write-muted);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.bar-save-state svg {
-  color: var(--write-ok);
-}
-
-.bar-action {
-  height: 32px;
-  padding: 0 16px;
-  border: 1px solid var(--write-control-border);
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.bar-action.draft {
-  color: var(--write-text);
-  background: var(--write-control-bg);
-}
-
-.bar-action.publish {
-  color: #ffffff;
-  border-color: transparent;
-  background: var(--write-chip-bg);
-  box-shadow: 0 8px 18px rgba(1, 1, 254, 0.22);
-}
-
-.bar-action:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
-}
-
-.write-main {
-  position: relative;
+/* ===== 左侧大纲栏 ===== */
+.outline-rail {
+  width: 36px;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--write-editor-divider);
+  background: var(--write-editor-bg);
+  transition: width 0.2s ease,
+  background 0.25s ease;
 }
 
-.write-main.is-outline-hidden {
-  grid-template-columns: minmax(0, 1fr);
+.outline-rail.is-open {
+  width: 232px;
 }
 
 .outline-expand {
-  position: absolute;
-  left: 12px;
-  top: 10px;
-  z-index: 5;
-  width: 26px;
-  height: 26px;
+  width: 100%;
   border: 0;
-  border-radius: 6px;
+  padding: 14px 0;
   display: inline-flex;
-  align-items: center;
   justify-content: center;
   color: var(--write-subtle);
   background: transparent;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   transition: color 0.2s ease;
 }
 
 .outline-expand:hover {
   color: var(--write-accent);
-}
-
-.editor-host :deep(.toolbar-item--right) {
-  margin-left: auto;
-}
-
-.editor-host :deep(.toolbar-item--publish svg),
-.editor-host :deep(.toolbar-item--publish) {
-  color: var(--write-accent);
-}
-
-.outline-pane {
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--write-divider);
-  background: var(--write-strip-bg);
 }
 
 .outline-head {
@@ -832,6 +886,7 @@ function confirmPublish() {
   color: var(--write-text);
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .outline-head button {
@@ -894,17 +949,87 @@ function confirmPublish() {
   font-size: 0.86rem;
 }
 
+/* ===== 中间编辑区（纯色背景） ===== */
 .editor-pane {
+  position: relative;
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  background: var(--write-editor-bg);
+  transition: background 0.25s ease;
+}
+
+.editor-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 22px;
+  border-bottom: 1px solid var(--write-editor-divider);
+}
+
+.bar-spacer {
+  flex: 1;
+}
+
+.bar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  padding: 4px 6px;
+  color: var(--write-body);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  transition: color 0.2s ease;
+}
+
+.bar-back:hover {
+  color: var(--write-accent);
+}
+
+.bar-action {
+  height: 30px;
+  padding: 0 16px;
+  border: 1px solid var(--write-control-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 0.2s ease,
+  box-shadow 0.2s ease;
+}
+
+.bar-action.draft {
+  color: var(--write-text);
+  background: var(--write-control-bg);
+}
+
+.bar-action.publish {
+  color: #ffffff;
+  border-color: transparent;
+  background: var(--write-chip-bg);
+  box-shadow: 0 8px 18px rgba(1, 1, 254, 0.22);
+}
+
+.bar-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
 }
 
 .doc-head {
-  width: min(820px, calc(100% - 48px));
-  margin: 26px auto 0;
-  padding-bottom: 18px;
+  width: calc(100% - 48px);
+  margin: 24px auto 0;
+  padding-bottom: 14px;
   display: grid;
   gap: 6px;
 }
@@ -936,6 +1061,14 @@ function confirmPublish() {
   color: var(--write-subtle);
 }
 
+.editor-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .editor-host {
   flex: 1;
   min-height: 0;
@@ -948,11 +1081,13 @@ function confirmPublish() {
   background: transparent;
 }
 
+/* 工具栏与正文同宽对齐（H B I … 在正文上方） */
 .editor-host :deep(.vditor-toolbar) {
-  padding: 0 18px !important;
+  padding: 0 24px !important;
   display: flex;
   justify-content: flex-start;
-  border-bottom: 1px solid var(--write-divider);
+  border-top: 1px solid var(--write-editor-divider);
+  border-bottom: 1px solid var(--write-editor-divider);
   background: transparent;
 }
 
@@ -960,12 +1095,31 @@ function confirmPublish() {
   padding: 0 2px;
 }
 
+/* 已保存状态：固定在工具栏右端 */
+.toolbar-save-state {
+  position: absolute;
+  top: 0;
+  right: 24px;
+  z-index: 5;
+  height: 37px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--write-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toolbar-save-state svg {
+  color: var(--write-ok);
+}
+
 .editor-host :deep(.vditor-content) {
   background: transparent;
 }
 
 .editor-host :deep(.vditor-reset) {
-  max-width: 820px;
   margin: 0 auto;
   padding: 18px 24px 56px !important;
   background: transparent !important;
@@ -986,7 +1140,7 @@ function confirmPublish() {
   background: transparent !important;
 }
 
-/* 去掉 Vditor 在标题左侧渲染的 H1~H6 等级提示（会被卡片边缘截断）。 */
+/* 去掉 Vditor 在标题左侧渲染的 H1~H6 等级提示（会被边缘截断）。 */
 .editor-host :deep(.vditor-ir .vditor-reset > h1:before),
 .editor-host :deep(.vditor-ir .vditor-reset > h2:before),
 .editor-host :deep(.vditor-ir .vditor-reset > h3:before),
@@ -1002,27 +1156,80 @@ function confirmPublish() {
   content: none !important;
 }
 
-.workspace-status {
+/* ===== 编辑区底部细栏：分类标签 + 统计 + 工具 ===== */
+.write-paper-plane-scene {
+  flex: 0 0 118px;
+}
+
+.editor-footer {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   min-height: 42px;
-  padding: 0 14px 0 18px;
-  border-top: 1px solid var(--write-divider);
-  background: var(--write-strip-bg);
+  padding: 5px 16px 5px 22px;
+  border-top: 1px solid var(--write-editor-divider);
   color: var(--write-body);
   font-size: 12px;
 }
 
-.workspace-status > span {
+.footer-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.footer-meta {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
+  color: var(--write-muted);
+  font-size: 12px;
   white-space: nowrap;
 }
 
-.workspace-status .ok {
-  color: var(--write-ok);
+.chip {
+  height: 24px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--write-tag-color);
+  background: var(--write-tag-bg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.2s ease,
+  background 0.2s ease,
+  transform 0.2s ease;
+}
+
+.chip:hover {
+  transform: translateY(-1px);
+}
+
+.chip.active,
+.chip:hover,
+.chip.solid,
+.chip.tag-add {
+  color: #ffffff;
+  background: var(--write-chip-bg);
+}
+
+.chip.chip-add {
+  width: 26px;
+  padding: 0;
+  justify-content: center;
+}
+
+.chip.chip-add svg {
+  width: 10px;
+  height: 10px;
 }
 
 .status-tool {
@@ -1037,9 +1244,8 @@ function confirmPublish() {
   background: transparent;
   cursor: pointer;
   font-size: 13px;
-  transition:
-    color 0.18s ease,
-    background 0.18s ease;
+  transition: color 0.18s ease,
+  background 0.18s ease;
 }
 
 .status-tool:hover,
@@ -1048,10 +1254,69 @@ function confirmPublish() {
   background: rgba(148, 163, 184, 0.16);
 }
 
+/* ===== 右侧图片面板（图片层 + 蒙层 + 引言层） ===== */
+.visual-pane {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.visual-image {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: opacity 0.2s ease;
+}
+
+/* 蒙层与首页 hero 一致 */
+.visual-mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4));
+}
+
+.visual-tools {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.visual-tool {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease,
+  transform 0.2s ease;
+}
+
+.visual-tool:hover {
+  background: rgba(15, 23, 42, 0.62);
+  transform: translateY(-1px);
+}
+
+.visual-upload-input {
+  display: none;
+}
+
+/* ===== 透明度面板（浮在正文框右下角） ===== */
 .opacity-panel {
   position: absolute;
-  right: 14px;
-  bottom: 50px;
+  right: 16px;
+  bottom: 52px;
   z-index: 40;
   display: flex;
   align-items: center;
@@ -1081,6 +1346,7 @@ function confirmPublish() {
   text-align: right;
 }
 
+/* ===== 发布弹窗 ===== */
 .publish-overlay {
   position: fixed;
   inset: 0;
@@ -1151,36 +1417,8 @@ function confirmPublish() {
   gap: 7px;
 }
 
-.chip {
+.chip-row .chip {
   height: 26px;
-  padding: 0 11px;
-  border: 0;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--write-tag-color);
-  background: var(--write-tag-bg);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.chip:hover {
-  transform: translateY(-1px);
-}
-
-.chip.active,
-.chip:hover,
-.chip.tag-add {
-  color: #ffffff;
-  background: var(--write-chip-bg);
 }
 
 .chip.tag svg {
@@ -1295,27 +1533,50 @@ function confirmPublish() {
   flex: 1.5;
 }
 
-@media (max-width: 960px) {
-  .write-main {
-    grid-template-columns: 200px minmax(0, 1fr);
+/* ===== 响应式 ===== */
+@media (max-height: 760px) {
+  .write-paper-plane-scene {
+    flex-basis: 96px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .write-workspace {
+    grid-template-columns: auto minmax(0, 1fr) minmax(240px, 24vw);
+  }
+}
+
+@media (max-width: 1080px) {
+  .write-workspace {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .visual-pane {
+    display: none;
   }
 }
 
 @media (max-width: 820px) {
+  /* 触屏没有悬停：导航常驻 */
+  .nav-float,
+  .nav-float.is-hidden {
+    transform: none;
+  }
+
+  .nav-hover-trigger {
+    display: none;
+  }
+
   .write-page {
-    padding-top: 78px;
+    padding-top: 64px;
   }
 
   .write-workspace {
-    width: min(100% - 20px, 680px);
-  }
-
-  .write-main,
-  .write-main.is-outline-hidden {
+    min-height: calc(100vh - 64px);
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .outline-pane {
+  .outline-rail {
     display: none;
   }
 
@@ -1328,9 +1589,13 @@ function confirmPublish() {
     font-size: 24px;
   }
 
-  .workspace-status {
+  .editor-topbar {
+    padding: 8px 14px;
+  }
+
+  .editor-footer {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     padding: 8px 12px;
   }
 }
