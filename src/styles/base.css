@@ -1,21 +1,9 @@
 :root {
-  /* 正文/全局字体：与 Matery 官网 demo 一致。
-     Matery 基于 Materialize，其 Material Design 观感来自 Google Roboto（在 index.html 以 webfont 引入）。
-     这里把 Roboto 置于栈首，保证 Latin/数字在各系统都渲染为 Roboto（与 demo 一致）；
-     中文等 Roboto 不含的字形自动回退到系统字体（Windows→微软雅黑，Mac→苹方），与 Matery 行为相同。 */
   --blog-font-family:
-    Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen-Sans, Ubuntu, Cantarell,
-    'Helvetica Neue', sans-serif;
-
-  /* 行内代码 / 代码块字体：取自 Matery matery.css 的 code 字体栈 */
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC',
+    'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
   --blog-mono-font-family: Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace;
-
-  /* 代码语言标签（.code-language）字体：取自 Matery matery.css 的 .code_lang / kbd 字体栈 */
   --blog-code-lang-font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-
-  /* 覆盖 Element Plus 默认字体栈，使其组件与博客正文（Matery 风格）保持一致。
-     base.css 在 element-plus/dist/index.css 之后引入，故此处覆盖生效。 */
-  --el-font-family: var(--blog-font-family);
 }
 
 * {
@@ -51,4 +39,15 @@ select {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+
+@media (max-width: 1024px), (prefers-reduced-motion: reduce) {
+  .post-list-page,
+  .post-detail-page,
+  .about-page,
+  .studio-page,
+  .write-page {
+    background-attachment: scroll !important;
+  }
 }

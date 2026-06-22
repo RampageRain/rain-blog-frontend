@@ -1,11 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/blog/HomeView.vue'
-import LoginView from '@/views/studio/LoginView.vue'
-import DashboardView from '@/views/studio/DashboardView.vue'
-import WriteView from '@/views/studio/WriteView.vue'
-import PostListView from '@/views/blog/PostListView.vue'
-import PostDetailView from '@/views/blog/PostDetailView.vue'
-import AboutView from '@/views/blog/AboutView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,32 +6,32 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: () => import('@/views/blog/HomeView.vue'),
     },
     {
       path: '/studio/login',
       name: 'studioLogin',
-      component: LoginView,
+      component: () => import('@/views/studio/LoginView.vue'),
     },
     {
       path: '/posts',
       name: 'posts',
-      component: PostListView,
+      component: () => import('@/views/blog/PostListView.vue'),
     },
     {
       path: '/posts/:id',
       name: 'postDetail',
-      component: PostDetailView,
+      component: () => import('@/views/blog/PostDetailView.vue'),
     },
     {
       path: '/about',
       name: 'about',
-      component: AboutView,
+      component: () => import('@/views/blog/AboutView.vue'),
     },
     {
       path: '/studio/dashboard',
       name: 'studioDashboard',
-      component: DashboardView,
+      component: () => import('@/views/studio/DashboardView.vue'),
       meta: {
         requiresAuth: true,
       },
@@ -46,7 +39,7 @@ const router = createRouter({
     {
       path: '/studio/write',
       name: 'studioWrite',
-      component: WriteView,
+      component: () => import('@/views/studio/WriteView.vue'),
       meta: {
         requiresAuth: true,
       },

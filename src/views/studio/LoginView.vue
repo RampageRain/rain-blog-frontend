@@ -92,7 +92,7 @@ async function handleLogin() {
   align-items: center;
   padding: 24px;
 
-  background-image: url('@/assets/images/login-bg.jpg');
+  background-image: url('@/assets/images/optimized/login-bg.webp');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -214,7 +214,7 @@ async function handleLogin() {
 
 @media (max-width: 800px) {
   .login-page {
-    background-image: url('@/assets/images/login-bg-mobile.jpg');
+    background-image: url('@/assets/images/optimized/login-bg-mobile.webp');
     background-size: cover;
     background-position: center center;
     padding: 20px;

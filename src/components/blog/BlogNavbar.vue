@@ -6,8 +6,8 @@ import { Icon } from '@iconify/vue'
 import { useAuthStore } from '@/stores/auth'
 
 import catStarLogo from '@/assets/images/cat-star-logo.png'
-import avatar from '@/assets/images/avart.jpg'
-import mobileDrawerBg from '@/assets/images/intro-card-img.jpg'
+import avatar from '@/assets/images/optimized/avart.webp'
+import mobileDrawerBg from '@/assets/images/optimized/intro-card-img.webp'
 
 const authStore = useAuthStore()
 const route = useRoute()

@@ -1,26 +1,25 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
 import BlogNavbar from '@/components/blog/BlogNavbar.vue'
-import PostListView from '@/views/blog/PostListView.vue'
-import ContactPopup from '@/components/blog/ContactPopup.vue'
 
-import homeBg1 from '@/assets/images/home-bg-1.jpg'
-import homeBg2 from '@/assets/images/home-bg-2.jpg'
-import homeBg3 from '@/assets/images/home-bg-3.jpg'
-import homeBg4 from '@/assets/images/home-bg-4.jpg'
-import homeBg5 from '@/assets/images/home-bg-5.jpg'
-import homeBg6 from '@/assets/images/home-bg-6.jpg'
-import homeBg7 from '@/assets/images/home-bg-7.jpg'
-import homeBg8 from '@/assets/images/home-bg-8.jpg'
-import homeBg9 from '@/assets/images/home-bg-9.jpg'
-import homeBgMobile1 from '@/assets/images/home-bg-mobile-1.jpg'
-import loginBgMobile from '@/assets/images/login-bg-mobile.jpg'
+import homeBg1 from '@/assets/images/optimized/home-bg-1.webp'
+import homeBg2 from '@/assets/images/optimized/home-bg-2.webp'
+import homeBg3 from '@/assets/images/optimized/home-bg-3.webp'
+import homeBg4 from '@/assets/images/optimized/home-bg-4.webp'
+import homeBg5 from '@/assets/images/optimized/home-bg-5.webp'
+import homeBg6 from '@/assets/images/optimized/home-bg-6.webp'
+import homeBg7 from '@/assets/images/optimized/home-bg-7.webp'
+import homeBg8 from '@/assets/images/optimized/home-bg-8.webp'
+import homeBg9 from '@/assets/images/optimized/home-bg-9.webp'
+import homeBgMobile1 from '@/assets/images/optimized/home-bg-mobile-1.webp'
+import loginBgMobile from '@/assets/images/optimized/login-bg-mobile.webp'
 
-import wechatQrCode from '@/assets/images/contact/wechat-qrcode.png'
-import qqQrCode from '@/assets/images/contact/qq-qrcode.png'
+
+const PostListView = defineAsyncComponent(() => import('@/views/blog/PostListView.vue'))
+const ContactPopup = defineAsyncComponent(() => import('@/components/blog/ContactPopup.vue'))
 
 const desktopBackgroundImages = [
   homeBg1,
@@ -245,7 +244,9 @@ const contactPopup = ref({
   qrCode: '',
 })
 
-function openWechatPopup() {
+async function openWechatPopup() {
+  const { default: wechatQrCode } = await import('@/assets/images/contact/wechat-qrcode.png')
+
   contactPopup.value = {
     title: '微信联系',
     account: 'Rain119813',
@@ -255,7 +256,9 @@ function openWechatPopup() {
   contactPopupVisible.value = true
 }
 
-function openQQPopup() {
+async function openQQPopup() {
+  const { default: qqQrCode } = await import('@/assets/images/contact/qq-qrcode.png')
+
   contactPopup.value = {
     title: 'QQ 联系',
     account: '1192924906',

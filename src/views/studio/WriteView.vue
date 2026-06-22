@@ -9,11 +9,11 @@ import BlogNavbar from '@/components/blog/BlogNavbar.vue'
 import {useBlogTheme} from '@/composables/useBlogTheme'
 import {countMarkdownWords} from '@/utils/markdown'
 
-import postListBgLight from '@/assets/images/postlist-bg-light.jpg'
-import postListBgNight from '@/assets/images/postlist-bg-night.jpg'
-import writeVisualImage1 from '@/assets/images/home-bg-mobile-1.jpg'
-import writeVisualImage2 from '@/assets/images/login-bg-mobile.jpg'
-import defaultCover from '@/assets/images/home-bg-1.jpg'
+import postListBgLight from '@/assets/images/optimized/postlist-bg-light.webp'
+import postListBgNight from '@/assets/images/optimized/postlist-bg-night.webp'
+import writeVisualImage1 from '@/assets/images/optimized/home-bg-mobile-1.webp'
+import writeVisualImage2 from '@/assets/images/optimized/login-bg-mobile.webp'
+import defaultCover from '@/assets/images/optimized/home-bg-1.webp'
 
 /* 随机背景候选池 */
 const VISUAL_IMAGE_POOL = [
